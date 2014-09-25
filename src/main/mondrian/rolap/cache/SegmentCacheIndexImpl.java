@@ -62,13 +62,20 @@ public class SegmentCacheIndexImpl implements SegmentCacheIndex {
     private final Thread thread;
 
     /**
+     * MINUBO_MONDRIAN_CHANGE
+     */
+    private final BitKey rollupExcludedColumns;
+    
+    /**
      * Creates a SegmentCacheIndexImpl.
      *
      * @param thread Thread that must be used to execute commands.
      */
-    public SegmentCacheIndexImpl(Thread thread) {
+    public SegmentCacheIndexImpl(
+    		Thread thread, BitKey rollupExcludedColumns) {
         this.thread = thread;
         assert thread != null;
+        this.rollupExcludedColumns = rollupExcludedColumns;
     }
 
     public static List makeConverterKey(SegmentHeader header) {
@@ -633,6 +640,11 @@ public class SegmentCacheIndexImpl implements SegmentCacheIndex {
         final List<BitKey> ancestors =
             factInfo.bitkeyPoset.getAncestors(constrainedColsBitKey);
         for (BitKey bitKey : ancestors) {
+        	//MINUBO_MONDRIAN_CHANGE
+        	if (bitKey.intersects(rollupExcludedColumns)) {
+        		continue;
+        	}
+        	
             final List bitkeyKey = makeBitkeyKey(
                 schemaName,
                 schemaChecksum,

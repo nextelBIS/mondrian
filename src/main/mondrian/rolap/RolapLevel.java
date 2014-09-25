@@ -82,6 +82,9 @@ public class RolapLevel extends LevelBase {
     private final Map<String, Annotation> annotationMap;
     private final SqlStatement.Type internalType; // may be null
 
+
+    private boolean isN2MValue; //MINUBO_MONDRIAN_CHANGE
+    
     /**
      * Creates a level.
      *
@@ -111,6 +114,7 @@ public class RolapLevel extends LevelBase {
         HideMemberCondition hideMemberCondition,
         LevelType levelType,
         String approxRowCount,
+        boolean isN2MValue, //MINUBO_MONDRIAN_CHANGE
         Map<String, Annotation> annotationMap)
     {
         super(
@@ -213,6 +217,9 @@ public class RolapLevel extends LevelBase {
         }
         this.internalType = internalType;
         this.hideMemberCondition = hideMemberCondition;
+        
+      //MINUBO_MONDRIAN_CHANGE
+        this.isN2MValue = isN2MValue;
     }
 
     public RolapHierarchy getHierarchy() {
@@ -341,6 +348,7 @@ public class RolapLevel extends LevelBase {
                     ? "TimeHalfYears"
                     : xmlLevel.levelType),
             xmlLevel.approxRowCount,
+            xmlLevel.mulitMapping,
             RolapHierarchy.createAnnotationMap(xmlLevel.annotations));
 
         if (!Util.isEmpty(xmlLevel.caption)) {
@@ -685,6 +693,14 @@ public class RolapLevel extends LevelBase {
             }
         }
         return null;
+    }
+    
+    /**
+     * MINUBO_MONDRIAN_CHANGE
+     * @return
+     */
+    public boolean isN2MValue() {
+    	return isN2MValue;
     }
 }
 

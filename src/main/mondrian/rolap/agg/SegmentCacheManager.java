@@ -1578,7 +1578,8 @@ public class SegmentCacheManager {
          */
         public SegmentCacheIndex getIndex(RolapStar star) {
             if (!indexes.containsKey(star)) {
-                indexes.put(star, new SegmentCacheIndexImpl(thread));
+            	//MINUBO_MONDRIAN_CHANGE
+                indexes.put(star, new SegmentCacheIndexImpl(thread, star.getN2MColumnBitKey()));
             }
             return indexes.get(star);
         }
