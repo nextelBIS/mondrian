@@ -1145,7 +1145,7 @@ public class RolapHierarchy extends HierarchyBase {
                 null,
                 src.getHideMemberCondition(),
                 src.getLevelType(),
-                "",
+                "", false, //MINUBO_MONDRIAN_CHANGE
                 Collections.<String, Annotation>emptyMap());
         peerHier.levels = Util.append(peerHier.levels, level);
 
