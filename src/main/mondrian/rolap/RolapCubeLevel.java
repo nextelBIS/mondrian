@@ -57,7 +57,7 @@ public class RolapCubeLevel extends RolapLevel {
             level.getInternalType(),
             level.getHideMemberCondition(),
             level.getLevelType(),
-            "" + level.getApproxRowCount(),
+            "" + level.getApproxRowCount(), false,
             level.getAnnotationMap());
 
         this.rolapLevel = level;
