@@ -221,7 +221,6 @@ public class RolapLevel extends LevelBase {
         
       //MINUBO_MONDRIAN_CHANGE
         this.multiMapping = multiMapping;
-        System.out.println("ddddd " + multiMapping);
     }
 
     public RolapHierarchy getHierarchy() {
