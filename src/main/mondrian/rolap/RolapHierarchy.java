@@ -271,6 +271,9 @@ public class RolapHierarchy extends HierarchyBase {
                     throw MondrianResource.instance()
                         .LevelMustHaveNameExpression.ex(xmlLevel.name);
                 }
+                System.out.println(xmlLevel);
+                System.out.println(xmlLevel.mulitMapping);
+                
                 levels[i + 1] = new RolapLevel(this, i + 1, xmlLevel);
             }
         } else {

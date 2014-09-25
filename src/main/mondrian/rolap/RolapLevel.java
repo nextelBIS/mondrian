@@ -349,7 +349,7 @@ public class RolapLevel extends LevelBase {
                     ? "TimeHalfYears"
                     : xmlLevel.levelType),
             xmlLevel.approxRowCount,
-            xmlLevel.mulitMapping,
+            xmlLevel.mulitMapping, //MINUBO_MONDRIAN_CHANGE
             RolapHierarchy.createAnnotationMap(xmlLevel.annotations));
 
         if (!Util.isEmpty(xmlLevel.caption)) {
