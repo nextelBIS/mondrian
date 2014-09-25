@@ -782,7 +782,7 @@ Revision is $Id$
                 members.
             </Doc>
         </Attribute>
-        <Attribute name="mulitMapping" type="Boolean" default="false" required="false">
+        <Attribute name="multiMapping" type="Boolean" default="false" required="false">
             <Doc>
                This level allows multiple mapping for one fact table entry.
                MINUBO_MONDRIAN_CHANGE
