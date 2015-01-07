@@ -703,7 +703,7 @@ public class XmlaHandler {
                         + "through"));
             }
         } else {
-            final String formatName =
+            /*final String formatName =
                 properties.get(PropertyDefinition.Format.name());
             if (formatName != null) {
                 Format format = getFormat(request, null);
@@ -714,7 +714,7 @@ public class XmlaHandler {
                         "<Format>: only 'Multidimensional', 'Tabular' "
                         + "currently supported");
                 }
-            }
+            }*/
             final String axisFormatName =
                 properties.get(PropertyDefinition.AxisFormat.name());
             if (axisFormatName != null) {
@@ -1342,7 +1342,7 @@ public class XmlaHandler {
     }
 
     static void writeEmptyDatasetXmlSchema(SaxWriter writer, SetType setType) {
-        String setNsXmla = NS_XMLA_ROWSET;
+        /*String setNsXmla = NS_XMLA_ROWSET;
         writer.startElement(
             "xsd:schema",
             "xmlns:xsd", NS_XSD,
@@ -1356,7 +1356,7 @@ public class XmlaHandler {
             "xsd:element",
             "name", "root");
 
-        writer.endElement(); // xsd:schema
+        writer.endElement(); // xsd:schema*/
     }
 
     private QueryResult executeDrillThroughQuery(XmlaRequest request)
@@ -1715,17 +1715,17 @@ public class XmlaHandler {
                 final Enumeration.ResponseMimeType responseMimeType =
                     getResponseMimeType(request);
                 final MDDataSet dataSet;
-                if (format == Format.Multidimensional) {
+                if (format == Format.Tabular) {
                     dataSet =
-                        new MDDataSet_Multidimensional(
-                            cellSet,
-                            content != Content.DataIncludeDefaultSlicer,
-                            responseMimeType
-                            == Enumeration.ResponseMimeType.JSON);
-                } else {
+                               new MDDataSet_Tabular(cellSet);
+                   } else {
                     dataSet =
-                        new MDDataSet_Tabular(cellSet);
-                }
+                               new MDDataSet_Multidimensional(
+                                   cellSet,
+                                   content != Content.DataIncludeDefaultSlicer,
+                                   responseMimeType
+                                   == Enumeration.ResponseMimeType.JSON);
+                   }
                 success = true;
                 return dataSet;
             } catch (XmlaException ex) {
