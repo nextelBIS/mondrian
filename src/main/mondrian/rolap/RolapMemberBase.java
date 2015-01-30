@@ -93,7 +93,7 @@ public class RolapMemberBase
             Object key,
             String name,
             MemberType memberType) {
-            this(parentMember, level, memberType, null);
+            this(parentMember, level, key, name, memberType, null);
         }
     
     /**
