@@ -5348,7 +5348,8 @@ public class SchemaExplorer
         "datatype",
         "formatter",
         "caption",
-        "visible"
+        "visible",
+        "folder"
     };
 
     static final String[] DEF_CALCULATED_MEMBER = {

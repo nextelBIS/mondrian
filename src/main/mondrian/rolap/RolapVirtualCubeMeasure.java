@@ -35,9 +35,10 @@ public class RolapVirtualCubeMeasure
         RolapMember parentMember,
         RolapLevel level,
         RolapStoredMeasure cubeMeasure,
-        Map<String, Annotation> annotationMap)
+        Map<String, Annotation> annotationMap,
+        String folder)
     {
-        super(parentMember, level, cubeMeasure.getName());
+        super(parentMember, level, cubeMeasure.getName(), folder);
         this.cubeMeasure = cubeMeasure;
         this.annotationMap = annotationMap;
     }

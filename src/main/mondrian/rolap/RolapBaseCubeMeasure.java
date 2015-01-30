@@ -83,9 +83,10 @@ public class RolapBaseCubeMeasure
         MondrianDef.Expression expression,
         String aggregatorName,
         String datatype,
+        String folder,
         Map<String, Annotation> annotationMap)
     {
-        super(parentMember, level, name, null, MemberType.MEASURE);
+        super(parentMember, level, name, null, MemberType.MEASURE, folder);
         assert annotationMap != null;
         this.cube = cube;
         this.annotationMap = annotationMap;
@@ -151,7 +152,7 @@ public class RolapBaseCubeMeasure
     public RolapAggregator getAggregator() {
         return aggregator;
     }
-
+    
     public RolapCube getCube() {
         return cube;
     }

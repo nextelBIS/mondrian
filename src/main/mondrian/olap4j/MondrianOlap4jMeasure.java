@@ -24,7 +24,7 @@ import org.olap4j.metadata.Measure;
  * @author jhyde
  * @since Dec 10, 2007
  */
-class MondrianOlap4jMeasure
+public class MondrianOlap4jMeasure
     extends MondrianOlap4jMember
     implements Measure
 {

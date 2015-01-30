@@ -352,7 +352,7 @@ public class RolapCube extends CubeBase {
                 this, null, measuresLevel, xmlMeasure.name,
                 xmlMeasure.caption, xmlMeasure.description,
                 xmlMeasure.formatString, measureExp,
-                aggregator, xmlMeasure.datatype,
+                aggregator, xmlMeasure.datatype, xmlMeasure.folder,
                 RolapHierarchy.createAnnotationMap(xmlMeasure.annotations));
 
         final String cellFormatterClassName;
@@ -531,7 +531,7 @@ public class RolapCube extends CubeBase {
                                 measuresLevel,
                                 (RolapStoredMeasure) cubeMeasure,
                                 RolapHierarchy.createAnnotationMap(
-                                    xmlMeasure.annotations));
+                                    xmlMeasure.annotations), xmlMeasure.folder);
 
                         // Set member's visibility, default true.
                         Boolean visible = xmlMeasure.visible;
@@ -3074,7 +3074,7 @@ public class RolapCube extends CubeBase {
                         null,
                         measuresLevel,
                         baseMeasure,
-                        Collections.<String, Annotation>emptyMap());
+                        Collections.<String, Annotation>emptyMap(), baseMeasure.getFolder());
                 if (!measuresFound.contains(virtualCubeMeasure)) {
                     measuresFound.add(virtualCubeMeasure);
                 }
