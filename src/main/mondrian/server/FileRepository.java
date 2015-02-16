@@ -1,12 +1,12 @@
 /*
-* This software is subject to the terms of the Eclipse Public License v1.0
-* Agreement, available at the following URL:
-* http://www.eclipse.org/legal/epl-v10.html.
-* You must accept the terms of that agreement to use this software.
-*
-* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+// This software is subject to the terms of the Eclipse Public License v1.0
+// Agreement, available at the following URL:
+// http://www.eclipse.org/legal/epl-v10.html.
+// You must accept the terms of that agreement to use this software.
+//
+// Copyright (C) 2005-2014 Pentaho and others
+// All Rights Reserved.
 */
-
 package mondrian.server;
 
 import mondrian.olap.*;
@@ -118,54 +118,66 @@ public class FileRepository implements Repository {
             throw Util.newError("Unknown database '" + databaseName + "'");
         }
 
-        final CatalogInfo catalogInfo;
         if (catalogName == null) {
             if (datasourceInfo.catalogMap.size() == 0) {
                 throw new OlapException(
                     "No catalogs in the database named "
                     + datasourceInfo.name);
             }
-            catalogInfo =
-                datasourceInfo
-                    .catalogMap
-                    .values()
-                    .iterator()
-                    .next();
+            for (CatalogInfo catalogInfo : datasourceInfo.catalogMap.values()) {
+              try {
+                return getConnection(catalogInfo, server, roleName, props);
+              } catch (Exception e) {
+                LOGGER.warn("Failed getting connection. Skipping", e);
+              }
+            }
         } else {
-            catalogInfo =
+          CatalogInfo namedCatalogInfo =
                 datasourceInfo.catalogMap.get(catalogName);
-        }
-        if (catalogInfo == null) {
+          if (namedCatalogInfo == null) {
             throw Util.newError("Unknown catalog '" + catalogName + "'");
+          }
+          return getConnection(namedCatalogInfo, server, roleName, props);
         }
-        String connectString = catalogInfo.olap4jConnectString;
 
-        // Save the server for the duration of the call to 'getConnection'.
-        final LockBox.Entry entry =
-            MondrianServerRegistry.INSTANCE.lockBox.register(server);
+        throw Util.newError("No suitable connection found");
+    }
 
-        final Properties properties = new Properties();
-        properties.setProperty(
-            RolapConnectionProperties.Instance.name(),
-            entry.getMoniker());
-        if (roleName != null) {
-            properties.setProperty(
-                RolapConnectionProperties.Role.name(),
-                roleName);
-        }
-        properties.putAll(props);
-        // Make sure we load the Mondrian driver into
-        // the ClassLoader.
-        try {
-          ClassResolver.INSTANCE.forName(
-              MondrianOlap4jDriver.class.getName(), true);
-        } catch (ClassNotFoundException e) {
-            throw new OlapException("Cannot find mondrian olap4j driver.");
-        }
-        // Now create the connection
-        final java.sql.Connection connection =
-            java.sql.DriverManager.getConnection(connectString, properties);
-        return ((OlapWrapper) connection).unwrap(OlapConnection.class);
+    private OlapConnection getConnection(
+        CatalogInfo catalogInfo,
+        MondrianServer server,
+        String roleName,
+        Properties props)
+        throws SQLException
+    {
+      String connectString = catalogInfo.olap4jConnectString;
+
+      // Save the server for the duration of the call to 'getConnection'.
+      final LockBox.Entry entry =
+          MondrianServerRegistry.INSTANCE.lockBox.register(server);
+
+      final Properties properties = new Properties();
+      properties.setProperty(
+          RolapConnectionProperties.Instance.name(),
+          entry.getMoniker());
+      if (roleName != null) {
+          properties.setProperty(
+              RolapConnectionProperties.Role.name(),
+              roleName);
+      }
+      properties.putAll(props);
+      // Make sure we load the Mondrian driver into
+      // the ClassLoader.
+      try {
+        ClassResolver.INSTANCE.forName(
+            MondrianOlap4jDriver.class.getName(), true);
+      } catch (ClassNotFoundException e) {
+          throw new OlapException("Cannot find mondrian olap4j driver.");
+      }
+
+      final java.sql.Connection connection =
+          java.sql.DriverManager.getConnection(connectString, properties);
+      return ((OlapWrapper) connection).unwrap(OlapConnection.class);
     }
 
     public void shutdown() {
@@ -173,13 +185,13 @@ public class FileRepository implements Repository {
         repositoryContentFinder.shutdown();
     }
 
-    private ServerInfo getServerInfo() {
+    ServerInfo getServerInfo() {
         synchronized (SERVER_INFO_LOCK) {
             if (this.serverInfo != null) {
                 return this.serverInfo;
             }
 
-            final String content = repositoryContentFinder.getContent();
+            final String content = getRepositoryContentFinder().getContent();
             DataSourcesConfig.DataSources xmlDataSources =
                 XmlaSupport.parseDataSources(content, LOGGER);
             ServerInfo serverInfo = new ServerInfo();
@@ -196,7 +208,7 @@ public class FileRepository implements Repository {
                         "URL",
                         xmlDataSource.getURL(),
                         "DataSourceInfo",
-                        xmlDataSource.getDataSourceName(),
+                        xmlDataSource.getDataSourceInfo(),
                         "ProviderName",
                         xmlDataSource.getProviderName(),
                         "ProviderType",
@@ -281,12 +293,21 @@ public class FileRepository implements Repository {
             schema);
     }
 
-    private static class ServerInfo {
+    // Class is defined as package-protected in order to be accessible by unit
+    // tests
+    static class ServerInfo {
         private Map<String, DatabaseInfo> datasourceMap =
             new HashMap<String, DatabaseInfo>();
+
+        // Method is created to variable has been been accessible by unit tests
+        Map<String, DatabaseInfo> getDatasourceMap() {
+           return datasourceMap;
+        }
     }
 
-    private static class DatabaseInfo {
+    // Class is defined as package-protected in order to be accessible by unit
+    // tests
+    static class DatabaseInfo {
         private final String name;
         private final Map<String, Object> properties;
         private Map<String, CatalogInfo> catalogMap =
@@ -296,11 +317,15 @@ public class FileRepository implements Repository {
             this.name = name;
             this.properties = properties;
         }
+
+        // Method is created to variable has been been accessible by unit tests
+        Map<String, Object> getProperties() {
+            return properties;
+        }
     }
 
     private static class CatalogInfo {
         private final String connectString;
-        private RolapSchema rolapSchema; // populated on demand
         private final String olap4jConnectString;
         private final CatalogLocator locator;
 
@@ -318,22 +343,25 @@ public class FileRepository implements Repository {
         }
 
         private RolapSchema getRolapSchema() {
-            if (rolapSchema == null) {
-                RolapConnection rolapConnection = null;
-                try {
-                    rolapConnection =
-                        (RolapConnection)
-                            DriverManager.getConnection(
-                                connectString, this.locator);
-                    rolapSchema = rolapConnection.getSchema();
-                } finally {
-                    if (rolapConnection != null) {
-                        rolapConnection.close();
-                    }
+            RolapConnection rolapConnection = null;
+            try {
+                rolapConnection =
+                    (RolapConnection)
+                        DriverManager.getConnection(
+                            connectString, this.locator);
+                return rolapConnection.getSchema();
+            } finally {
+                if (rolapConnection != null) {
+                    rolapConnection.close();
                 }
             }
-            return rolapSchema;
         }
+    }
+
+    // Method is defined as package-protected in order to be accessible by unit
+    // tests
+    RepositoryContentFinder getRepositoryContentFinder() {
+        return repositoryContentFinder;
     }
 }
 

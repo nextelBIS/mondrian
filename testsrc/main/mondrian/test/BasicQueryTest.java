@@ -10,7 +10,6 @@
 //
 // jhyde, Feb 14, 2003
 */
-
 package mondrian.test;
 
 import mondrian.calc.ResultStyle;
@@ -21,7 +20,9 @@ import mondrian.olap.*;
 import mondrian.olap.Position;
 import mondrian.olap.type.NumericType;
 import mondrian.olap.type.Type;
+import mondrian.rolap.RolapConnection;
 import mondrian.rolap.RolapSchema;
+import mondrian.rolap.RolapUtil;
 import mondrian.server.Execution;
 import mondrian.spi.*;
 import mondrian.spi.impl.JdbcStatisticsProvider;
@@ -29,6 +30,10 @@ import mondrian.spi.impl.SqlStatisticsProvider;
 import mondrian.util.Bug;
 
 import junit.framework.Assert;
+
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 
 import org.eigenbase.util.property.StringProperty;
 
@@ -42,6 +47,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -6083,6 +6089,7 @@ public class BasicQueryTest extends FoodMartTestCase {
         executeAndCancel(query, 2000);
     }
 
+
     private void executeAndCancel(String queryString, int waitMillis)
     {
         final TestContext tc = TestContext.instance().create(
@@ -6140,6 +6147,189 @@ public class BasicQueryTest extends FoodMartTestCase {
                 + throwables[0]);
         }
         TestContext.checkThrowable(throwable, "canceled");
+    }
+
+    /**
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-2161">
+     * MONDRIAN-2161
+     * </a>.<br>
+     * Tests cancelation after executing sql for readTuples
+     */
+    public void testCancelSqlFetchReadTuples() throws Exception {
+        // 512 rows
+        final int cancelInterval = 50;
+        final String query =
+            "SELECT {[Measures].[Unit Sales]} ON COLUMNS,\n"
+            + "  {[Product].members} ON ROWS\n"
+            + "FROM [Sales]";
+        propSaver.set(props.CancelPhaseInterval, cancelInterval);
+        final String triggerSql = "product_name";
+
+        Long rows = executeAndCancelAtSqlFetch(
+            query, triggerSql,
+            "SqlTupleReader.readTuples [[Product].[Product Name]]");
+         Assert.assertEquals(
+             "Query not aborted at first interval",
+             new Long(cancelInterval), rows);
+    }
+
+    /**
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-2161">
+     * MONDRIAN-2161
+     * </a>.<br>
+     * Tests cancelation after executing sql for SegmentLoader
+     */
+    public void testCancelSqlFetchSegmentLoad() throws Exception {
+          // 512 rows
+          final int cancelInterval = 101;
+          propSaver.set(props.CancelPhaseInterval, cancelInterval);
+          // this will avoid spamming output with cache failures, but should
+          // also work without side effects with cache enabled
+          propSaver.set(props.DisableCaching, true);
+          final String query =
+              "SELECT {[Measures].[Unit Sales]} ON COLUMNS,\n"
+              + "  {[Product].members} ON ROWS\n"
+              + "FROM [Sales]";
+          final String triggerSql = "product_name";
+
+        Long rows = executeAndCancelAtSqlFetch(
+            query, triggerSql,
+            "Segment.load");
+         Assert.assertEquals(
+             "Query not aborted at first interval",
+             new Long(cancelInterval), rows);
+    }
+
+    /**
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-2161">
+     * MONDRIAN-2161
+     * </a>.<br>
+     * Tests cancelation after executing sql for getMemberChildren
+     */
+    public void testCancelSqlFetchMemberChildren() throws Exception {
+        // 106 rows
+        final int cancelInterval = 33;
+        final String query =
+            "SELECT {[Measures].[Unit Sales]} ON COLUMNS,\n"
+            + "  {[Customers].[Mexico].[Guerrero].[Acapulco].Children} ON ROWS\n"
+            + "FROM [Sales]";
+        propSaver.set(props.CancelPhaseInterval, cancelInterval);
+
+        Long rows = executeAndCancelAtSqlFetch(
+            query, "customer_id", "SqlMemberSource.getMemberChildren");
+        Assert.assertEquals(
+            "Query not aborted at first interval",
+            new Long(cancelInterval), rows);
+    }
+
+    private Long executeAndCancelAtSqlFetch(
+        final String query, final String triggerSql, final String component)
+        throws Exception
+    {
+        // avoid cache to ensure sql executes
+        TestContext context = getTestContext().withFreshConnection();
+        context.flushSchemaCache();
+
+        RolapConnection conn =  (RolapConnection) context.getConnection();
+        final mondrian.server.Statement stmt = conn.getInternalStatement();
+        // use the logger to block and trigger cancelation at the right time
+        Logger sqlLog = RolapUtil.SQL_LOGGER;
+        propSaver.set(sqlLog, org.apache.log4j.Level.DEBUG);
+        final Execution exec = new Execution(stmt, 50000);
+        final CountDownLatch okToGo = new CountDownLatch(1);
+        SqlCancelingAppender canceler =
+            new SqlCancelingAppender(component, triggerSql, exec, okToGo);
+        stmt.setQuery(conn.parseQuery(query));
+        sqlLog.addAppender(canceler);
+        try {
+            conn.execute(exec);
+            Assert.fail("Query not canceled.");
+        } catch (QueryCanceledException e) {
+            // 5 sec just in case it all goes wrong
+            if (!okToGo.await(5, TimeUnit.SECONDS)) {
+                Assert.fail("Timeout reading sql statement end from log.");
+            }
+            return canceler.rows;
+        } finally {
+            sqlLog.removeAppender(canceler);
+            context.close();
+        }
+        return null;
+    }
+
+    /**
+     * Listens to sql log for a specific query, cancels mdx when it's
+     * executed and reads number of fetched rows.
+     */
+    private static class SqlCancelingAppender extends AppenderSkeleton {
+        private String trigger;
+        private Pattern stmtNbrGetter, stmtCanceler, stmtRowCounter;
+        private int state = 0;
+        Long rows = null;
+        Execution exec;
+        CountDownLatch latch;
+
+        SqlCancelingAppender(
+            String comp, String trigger, Execution exec, CountDownLatch latch)
+        {
+            super();
+            this.trigger = trigger;
+            this.latch = latch;
+            // capture stalked statement's number
+            stmtNbrGetter = Pattern.compile(
+                "^([0-9]*):\\s*"
+                    + Pattern.quote(comp) + "\\s*: executing sql ");
+            this.exec = exec;
+        }
+
+        @Override
+        protected synchronized void append(LoggingEvent event) {
+            String msg = event.getMessage().toString();
+            if (state == 0
+                && msg.contains(trigger))
+            {
+                Matcher matcher = stmtNbrGetter.matcher(msg);
+                if (matcher.find()) {
+                    // get sql statement number
+                    String stmt = matcher.group(1);
+                    // log entry to trigger cancel
+                    stmtCanceler =
+                        Pattern.compile("^" + stmt + ":\\s*,\\s*exec\\s");
+                    // log entry to find fetched rows
+                    stmtRowCounter = Pattern.compile(
+                        "^" + stmt + ":\\s*,[^,]*,\\s+([0-9]*)\\s+rows\\s*$");
+                    state = 1;
+                }
+            } else if (state == 1) {
+                if (stmtCanceler.matcher(msg).find()) {
+                    // sql in fetch phase
+                    // cancel the mdx query
+                    exec.cancel();
+                    state = 2;
+                }
+            } else if (state == 2) {
+                Matcher matcher = stmtRowCounter.matcher(msg);
+                if (matcher.find()) {
+                    rows = new Long(matcher.group(1));
+                    // invalidate
+                    state++;
+                    // release test
+                    latch.countDown();
+                }
+            }
+        }
+
+        @Override
+        public void close() {
+        }
+
+        @Override
+        public boolean requiresLayout() {
+            return false;
+        }
     }
 
     public void testQueryTimeout() {
@@ -8128,7 +8318,11 @@ public class BasicQueryTest extends FoodMartTestCase {
                 + " <MeasureExpression>\n"
                 + " <SQL dialect='generic'>\n"
                 + " NULL"
-                + " </SQL></MeasureExpression></Measure>",
+                + " </SQL>"
+                + " <SQL dialect='vertica'>\n"
+                + " NULL::FLOAT"
+                + " </SQL>"
+                + "</MeasureExpression></Measure>",
                 null, null);
         testContext.executeQuery(
             "select "
@@ -8158,6 +8352,104 @@ public class BasicQueryTest extends FoodMartTestCase {
             + "Axis #2:\n"
             + "{[Gender].[All Gender]}\n"
             + "Row #0: " + returnedValue + "\n");
+    }
+
+    /**
+     * This test is disabled by default because we can't set the max number
+     * of SQL threads dynamically. The test still works when run standalone.
+     */
+    public void _testSqlPoolAndQueue() throws Exception {
+        // We use 10 SQL threads and the query needs about 30-ish.
+        // If the bug exists, it'll fail.
+        propSaver.set(
+            propSaver.properties.SegmentCacheManagerNumberSqlThreads, 10);
+        final String mdx =
+            "with set [*NATIVE_CJ_SET] as 'NonEmptyCrossJoin([*BASE_MEMBERS__Promotion Media_], NonEmptyCrossJoin([*BASE_MEMBERS__Customers_], NonEmptyCrossJoin([*BASE_MEMBERS__Yearly Income_], NonEmptyCrossJoin([*BASE_MEMBERS__Gender_], NonEmptyCrossJoin([*BASE_MEMBERS__Education Level_], NonEmptyCrossJoin([*BASE_MEMBERS__Store Type_], [*BASE_MEMBERS__Promotions_]))))))'\n"
+            + "  set [*BASE_MEMBERS__Gender_] as '[Gender].[Gender].Members'\n"
+            + "  set [*SORTED_COL_AXIS] as 'Order([*CJ_COL_AXIS], [Promotion Media].CurrentMember.OrderKey, BASC)'\n"
+            + "  set [*BASE_MEMBERS__Promotions_] as '{[Promotions].[No Promotion]}'\n"
+            + "  set [*NATIVE_MEMBERS__Promotions_] as 'Generate([*NATIVE_CJ_SET], {[Promotions].CurrentMember})'\n"
+            + "  set [*BASE_MEMBERS__Customers_] as '{[Customers].[USA].[WA].[Spokane], [Customers].[USA].[WA].[Olympia], [Customers].[USA].[WA].[Port Orchard], [Customers].[USA].[WA].[Bremerton], [Customers].[USA].[WA].[Puyallup], [Customers].[USA].[WA].[Yakima], [Customers].[USA].[WA].[Tacoma], [Customers].[USA].[WA].[Burien]}'\n"
+            + "  set [*BASE_MEMBERS__Yearly Income_] as '[Yearly Income].[Yearly Income].Members'\n"
+            + "  set [*SORTED_ROW_AXIS] as 'Order([*CJ_ROW_AXIS], [Customers].CurrentMember.OrderKey, BASC, Ancestor([Customers].CurrentMember, [Customers].[State Province]).OrderKey, BASC, [Yearly Income].CurrentMember.OrderKey, BASC, [Gender].CurrentMember.OrderKey, BASC, [Education Level].CurrentMember.OrderKey, BASC)'\n"
+            + "  set [*NATIVE_MEMBERS__Store Type_] as 'Generate([*NATIVE_CJ_SET], {[Store Type].CurrentMember})'\n"
+            + "  set [*CJ_COL_AXIS] as 'Generate([*NATIVE_CJ_SET], {[Promotion Media].CurrentMember})'\n"
+            + "  set [*BASE_MEMBERS__Store Type_] as '{[Store Type].[Supermarket]}'\n"
+            + "  set [*BASE_MEMBERS__Measures_] as '{[Measures].[Customer Count]}'\n"
+            + "  set [*BASE_MEMBERS__Education Level_] as '{[Education Level].[Bachelors Degree], [Education Level].[Graduate Degree]}'\n"
+            + "  set [*CJ_SLICER_AXIS] as 'Generate([*NATIVE_CJ_SET], {([Store Type].CurrentMember, [Promotions].CurrentMember)})'\n"
+            + "  set [*CJ_ROW_AXIS] as 'Generate([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)})'\n"
+            + "  set [*BASE_MEMBERS__Promotion Media_] as '[Promotion Media].[Media Type].Members'\n"
+            + "  member [Promotion Media].[*TOTAL_MEMBER_SEL~AGG] as 'Aggregate(Generate([*NATIVE_CJ_SET], {[Promotion Media].CurrentMember}))', SOLVE_ORDER = (- 104)\n"
+            + "  member [Promotion Media].[*TOTAL_MEMBER_SEL~SUM] as 'Sum(Generate([*NATIVE_CJ_SET], {[Promotion Media].CurrentMember}))', SOLVE_ORDER = 96\n"
+            + "  member [Yearly Income].[*DEFAULT_MEMBER] as '[Yearly Income].DefaultMember', SOLVE_ORDER = (- 400)\n"
+            + "  member [Yearly Income].[*TOTAL_MEMBER_SEL~AGG] as 'Aggregate(Generate(Exists([*NATIVE_CJ_SET], {[Customers].CurrentMember}), {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = (- 101)\n"
+            + "  member [Yearly Income].[*TOTAL_MEMBER_SEL~SUM] as 'Sum(Generate(Exists([*NATIVE_CJ_SET], {[Customers].CurrentMember}), {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = 99\n"
+            + "  member [Gender].[*DEFAULT_MEMBER] as '[Gender].DefaultMember', SOLVE_ORDER = (- 400)\n"
+            + "  member [Gender].[*TOTAL_MEMBER_SEL~AGG] as 'Aggregate(Generate(Exists([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember)}), {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = (- 102)\n"
+            + "  member [Gender].[*TOTAL_MEMBER_SEL~SUM] as 'Sum(Generate(Exists([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember)}), {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = 98\n"
+            + "  member [Education Level].[*DEFAULT_MEMBER] as '[Education Level].DefaultMember', SOLVE_ORDER = (- 400)\n"
+            + "  member [Customers].[*TOTAL_MEMBER_SEL~AGG] as 'Aggregate(Generate([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = (- 100)\n"
+            + "  member [Customers].[*TOTAL_MEMBER_SEL~SUM] as 'Sum(Generate([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember, [Gender].CurrentMember, [Education Level].CurrentMember)}))', SOLVE_ORDER = 100\n"
+            + "select Union(Crossjoin({[Promotion Media].[*TOTAL_MEMBER_SEL~AGG]}, [*BASE_MEMBERS__Measures_]), Union(Crossjoin({[Promotion Media].[*TOTAL_MEMBER_SEL~SUM]}, [*BASE_MEMBERS__Measures_]), Crossjoin([*SORTED_COL_AXIS], [*BASE_MEMBERS__Measures_]))) ON COLUMNS,\n"
+            + "  NON EMPTY Union(Crossjoin({[Customers].[*TOTAL_MEMBER_SEL~AGG]}, {([Yearly Income].[*DEFAULT_MEMBER], [Gender].[*DEFAULT_MEMBER], [Education Level].[*DEFAULT_MEMBER])}), Union(Crossjoin(Crossjoin(Generate([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember)}), {[Gender].[*TOTAL_MEMBER_SEL~AGG]}), {[Education Level].[*DEFAULT_MEMBER]}), Union(Crossjoin(Crossjoin(Generate([*NATIVE_CJ_SET], {[Customers].CurrentMember}), {[Yearly Income].[*TOTAL_MEMBER_SEL~AGG]}), {([Gender].[*DEFAULT_MEMBER], [Education Level].[*DEFAULT_MEMBER])}), Union(Crossjoin({[Customers].[*TOTAL_MEMBER_SEL~SUM]}, {([Yearly Income].[*DEFAULT_MEMBER], [Gender].[*DEFAULT_MEMBER], [Education Level].[*DEFAULT_MEMBER])}), Union(Crossjoin(Crossjoin(Generate([*NATIVE_CJ_SET], {([Customers].CurrentMember, [Yearly Income].CurrentMember)}), {[Gender].[*TOTAL_MEMBER_SEL~SUM]}), {[Education Level].[*DEFAULT_MEMBER]}), Union(Crossjoin(Crossjoin(Generate([*NATIVE_CJ_SET], {[Customers].CurrentMember}), {[Yearly Income].[*TOTAL_MEMBER_SEL~SUM]}), {([Gender].[*DEFAULT_MEMBER], [Education Level].[*DEFAULT_MEMBER])}), [*SORTED_ROW_AXIS])))))) ON ROWS\n"
+            + "from [Sales]\n"
+            + "where [*CJ_SLICER_AXIS]\n";
+        executeQuery(mdx);
+    }
+
+    /**
+     * Test case for <a href="http://jira.pentaho.com/browse/MONDRIAN-1925">
+     * MONDRIAN-1925: NameExpression within snowflake dimension causes exception
+     * </a>
+     */
+    public void testNameExpressionSnowflake() {
+        Dialect dialect = getTestContext().getDialect();
+        TestContext testContext =
+            getTestContext().createSubstitutingCube(
+                "Sales",
+                "<Dimension foreignKey=\"product_id\" type=\"StandardDimension\" visible=\"true\" highCardinality=\"false\" name=\"Example\">\n"
+                + "  <Hierarchy name=\"Example Hierarchy\" visible=\"true\" hasAll=\"true\" allMemberName=\"All\" allMemberCaption=\"All\" primaryKey=\"product_id\" primaryKeyTable=\"product\">\n"
+                + "    <Join leftKey=\"product_class_id\" rightKey=\"product_class_id\">\n"
+                + "      <Table name=\"product\">\n"
+                + "      </Table>\n"
+                + "         <Table name=\"product_class\">\n"
+                + "      </Table>\n"
+                + "    </Join>\n"
+                + "    <Level name=\"IsZero\" visible=\"true\" table=\"product\" column=\"product_id\" type=\"Integer\" uniqueMembers=\"false\" levelType=\"Regular\" hideMemberIf=\"Never\">\n"
+                + "      <NameExpression>\n"
+                + "        <SQL dialect=\"generic\">\n"
+                + "          <![CDATA[case when " + dialect.quoteIdentifier("product","product_id") + "=0 then 'Zero' else 'Non-Zero' end]]>\n"
+                + "        </SQL>\n"
+                + "      </NameExpression>\n"
+                + "    </Level>\n"
+                + "    <Level name=\"SubCat\" visible=\"true\" table=\"product_class\" column=\"product_class_id\" type=\"String\" uniqueMembers=\"false\" levelType=\"Regular\" hideMemberIf=\"Never\">\n"
+                + "      <NameExpression>\n"
+                + "        <SQL dialect=\"generic\">\n"
+                + "          <![CDATA[" + dialect.quoteIdentifier("product_class","product_subcategory") + "]]>\n"
+                + "        </SQL>\n"
+                + "      </NameExpression>\n"
+                + "    </Level>\n"
+                + "    <Level name=\"ProductName\" visible=\"true\" table=\"product\" column=\"product_id\" type=\"Integer\" uniqueMembers=\"false\" levelType=\"Regular\" hideMemberIf=\"Never\">\n"
+                + "      <NameExpression>\n"
+                + "        <SQL dialect=\"generic\">\n"
+                + "          <![CDATA["+ dialect.quoteIdentifier("product","product_name") + "]]>\n"
+                + "        </SQL>\n"
+                + "      </NameExpression>\n"
+                + "    </Level>\n"
+                + "  </Hierarchy>\n"
+                + "</Dimension>\n",
+                null,
+                null, null);
+        testContext.assertAxisReturns(
+            "[Example.Example Hierarchy].[Non-Zero]",
+            "[Example.Example Hierarchy].[Non-Zero]");
+        testContext.assertAxisReturns(
+            "[Example.Example Hierarchy].[Non-Zero].Children",
+            "[Example.Example Hierarchy].[Non-Zero].[Juice]");
+        testContext.assertAxisReturns(
+            "[Example.Example Hierarchy].[Non-Zero].[Juice].Children",
+            "[Example.Example Hierarchy].[Non-Zero].[Juice].[Washington Berry Juice]");
     }
 }
 
