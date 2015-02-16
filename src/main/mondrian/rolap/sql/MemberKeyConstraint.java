@@ -48,14 +48,16 @@ public class MemberKeyConstraint
     {
         for (int i = 0; i < columnList.size(); i++) {
             MondrianDef.Expression expression = columnList.get(i);
-            final Comparable value = valueList.get(i);
-            final Dialect.Datatype datatype = datatypeList.get(i);
-            sqlQuery.addWhere(
-                SqlConstraintUtils.constrainLevel2(
-                    sqlQuery,
-                    expression,
-                    datatype,
-                    value));
+            if(expression != null) {
+                final Comparable value = valueList.get(i);
+                final Dialect.Datatype datatype = datatypeList.get(i);
+                sqlQuery.addWhere(
+                    SqlConstraintUtils.constrainLevel2(
+                        sqlQuery,
+                        expression,
+                        datatype,
+                        value));
+            }
         }
     }
 
