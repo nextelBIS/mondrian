@@ -97,7 +97,7 @@ public class XmlaMetaDataConstraintsTest extends XmlaBaseTestCase {
         return props.toString();
     }
 
-    public void testDBSchemataFiltered() throws Exception {
+    /*public void testDBSchemataFiltered() throws Exception {
         doTest(
             RowsetDefinition.DBSCHEMA_SCHEMATA.name(), "FoodMart2");
         doTest(
@@ -109,7 +109,7 @@ public class XmlaMetaDataConstraintsTest extends XmlaBaseTestCase {
             RowsetDefinition.DBSCHEMA_SCHEMATA.name(), "FoodMart2");
         doTest(
             RowsetDefinition.DBSCHEMA_SCHEMATA.name(), "FoodMart1");
-    }
+    }*/
 
     public void testCatalogsFiltered() throws Exception {
         doTest(

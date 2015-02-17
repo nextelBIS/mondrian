@@ -129,9 +129,10 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                 (Aggregator) evaluator.getProperty(
                     Property.AGGREGATION_TYPE.name, null);
             if (aggregator == null) {
-                throw newEvalException(
-                    null,
-                    "Could not find an aggregator in the current evaluation context");
+                return nullValue;
+                //throw newEvalException(
+                 //   null,
+                  //  "Could not find an aggregator in the current evaluation context");
             }
             Aggregator rollup = aggregator.getRollup();
             if (rollup == null) {

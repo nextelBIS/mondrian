@@ -283,14 +283,14 @@ public abstract class DefaultXmlaServlet extends XmlaServlet {
 
                 // Make sure Element has mustUnderstand=1 attribute.
                 Attr attr = e.getAttributeNode(SOAP_MUST_UNDERSTAND_ATTR);
-                boolean mustUnderstandValue =
+                boolean mustUnderstandValue = 
                     attr != null
                     && attr.getValue() != null
                     && attr.getValue().equals("1");
 
-                if (!mustUnderstandValue) {
+                /*if (!mustUnderstandValue) {
                     continue;
-                }
+                }*/
 
                 // Is it an XMLA element
                 if (!NS_XMLA.equals(e.getNamespaceURI())) {
@@ -758,7 +758,7 @@ public abstract class DefaultXmlaServlet extends XmlaServlet {
             // information belonging to header entries. Detailed error
             // information belonging to header entries MUST be carried within
             // header entries.
-            if (phase != Phase.PROCESS_HEADER) {
+            if (false && phase != Phase.PROCESS_HEADER) {
                 writer.startElement("detail");
                 writer.startElement(
                     FAULT_NS_PREFIX + ":error",
