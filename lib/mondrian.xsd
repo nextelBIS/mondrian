@@ -191,6 +191,13 @@
                                             </xsd:documentation>
                                         </xsd:annotation>
                                     </xsd:attribute>
+                                    <xsd:attribute name="folder" type="xsd:string" use="optional">
+                                        <xsd:annotation>
+                                            <xsd:documentation>
+                                                Display folder for this measure. Can be localized from Properties file using #{propertyname}.
+                                            </xsd:documentation>
+                                        </xsd:annotation>
+                                    </xsd:attribute>
                                     <xsd:attribute name="visible" type="xsd:boolean" use="optional" default="true">
                                         <xsd:annotation>
                                             <xsd:documentation>
@@ -345,6 +352,13 @@
                                         <xsd:annotation>
                                             <xsd:documentation>
                                                 Unique name of the measure within its cube. 
+                                            </xsd:documentation>
+                                        </xsd:annotation>
+                                    </xsd:attribute>
+                                    <xsd:attribute name="folder" type="xsd:string" use="optional">
+                                        <xsd:annotation>
+                                            <xsd:documentation>
+                                               Display folder of the measure within its cube. 
                                             </xsd:documentation>
                                         </xsd:annotation>
                                     </xsd:attribute>

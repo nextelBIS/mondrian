@@ -22,7 +22,6 @@ import mondrian.util.*;
 
 import org.apache.commons.collections.map.Flat3Map;
 import org.apache.log4j.Logger;
-
 import org.eigenbase.util.property.StringProperty;
 
 import java.math.BigDecimal;
@@ -47,6 +46,7 @@ public class RolapMemberBase
     private Comparable orderKey;
     private Boolean isParentChildLeaf;
     private static final Logger LOGGER = Logger.getLogger(RolapMember.class);
+    private final String folder;
 
     /**
      * Sets a member's parent.
@@ -87,6 +87,15 @@ public class RolapMemberBase
 
     private Boolean containsAggregateFunction = null;
 
+    protected RolapMemberBase(
+            RolapMember parentMember,
+            RolapLevel level,
+            Object key,
+            String name,
+            MemberType memberType) {
+            this(parentMember, level, key, name, memberType, null);
+        }
+    
     /**
      * Creates a RolapMemberBase.
      *
@@ -101,8 +110,8 @@ public class RolapMemberBase
         RolapLevel level,
         Object key,
         String name,
-        MemberType memberType)
-    {
+        MemberType memberType,
+        String folder) {
         super(parentMember, level, memberType);
         assert key != null;
         assert !(parentMember instanceof RolapCubeMember)
@@ -127,20 +136,31 @@ public class RolapMemberBase
         } else if (key != null) {
             setUniqueName(key);
         }
+        this.folder = folder;
     }
 
     protected RolapMemberBase() {
         super();
         this.key = RolapUtil.sqlNullValue;
+        this.folder = null;
     }
 
+    RolapMemberBase(RolapMember parentMember, RolapLevel level, Object value, String folder) {
+        this(parentMember, level, value, null, MemberType.REGULAR, folder);
+        assert !(level instanceof RolapCubeLevel);
+    }
+    
     RolapMemberBase(RolapMember parentMember, RolapLevel level, Object value) {
-        this(parentMember, level, value, null, MemberType.REGULAR);
+        this(parentMember, level, value, null, MemberType.REGULAR, null);
         assert !(level instanceof RolapCubeLevel);
     }
 
     protected Logger getLogger() {
         return LOGGER;
+    }
+    
+    public String getFolder() {
+        return folder;
     }
 
     public RolapLevel getLevel() {

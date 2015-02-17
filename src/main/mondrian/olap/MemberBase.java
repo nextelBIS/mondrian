@@ -140,7 +140,7 @@ public abstract class MemberBase
     public String getDescription() {
         return (String) getPropertyValue(Property.DESCRIPTION.name);
     }
-
+    
     public boolean isMeasure() {
         return (flags & FLAG_MEASURE) != 0;
     }

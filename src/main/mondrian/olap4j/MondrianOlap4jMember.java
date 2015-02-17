@@ -9,19 +9,26 @@
 
 package mondrian.olap4j;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mondrian.olap.OlapElement;
+import mondrian.rolap.RolapBaseCubeMeasure;
 import mondrian.rolap.RolapConnection;
 import mondrian.rolap.RolapMeasure;
+import mondrian.rolap.RolapMemberBase;
 import mondrian.server.Locus;
 
 import org.olap4j.OlapException;
 import org.olap4j.impl.AbstractNamedList;
 import org.olap4j.impl.Named;
 import org.olap4j.mdx.ParseTreeNode;
-import org.olap4j.metadata.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.olap4j.metadata.Dimension;
+import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Level;
+import org.olap4j.metadata.Member;
+import org.olap4j.metadata.NamedList;
+import org.olap4j.metadata.Property;
 
 /**
  * Implementation of {@link Member}
@@ -195,7 +202,7 @@ class MondrianOlap4jMember
     public Object getPropertyValue(Property property) {
         return member.getPropertyValue(property.getName());
     }
-
+    
     public String getPropertyFormattedValue(Property property) {
         return member.getPropertyFormattedValue(property.getName());
     }
@@ -247,6 +254,13 @@ class MondrianOlap4jMember
 
     public String getDescription() {
         return member.getDescription();
+    }
+    
+    public String getFolder() {
+        if(member instanceof RolapMemberBase) {
+            return ((RolapMemberBase)member).getFolder();
+        }
+        return null;
     }
 
     public boolean isVisible() {

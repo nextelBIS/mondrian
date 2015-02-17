@@ -11,7 +11,37 @@
 
 package mondrian.xmla;
 
-import mondrian.olap.*;
+import static mondrian.olap.Util.filter;
+import static mondrian.xmla.XmlaConstants.NS_XMLA_ROWSET;
+import static mondrian.xmla.XmlaConstants.NS_XSD;
+import static mondrian.xmla.XmlaConstants.NS_XSI;
+import static mondrian.xmla.XmlaHandler.getExtra;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.SQLException;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import mondrian.olap.Category;
+import mondrian.olap.MondrianProperties;
+import mondrian.olap.MondrianServer;
+import mondrian.olap.Util;
+import mondrian.olap4j.MondrianOlap4jMeasure;
 import mondrian.util.Composite;
 
 import org.olap4j.OlapConnection;
@@ -20,27 +50,21 @@ import org.olap4j.impl.ArrayNamedListImpl;
 import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.mdx.IdentifierNode;
 import org.olap4j.mdx.IdentifierSegment;
-import org.olap4j.metadata.*;
+import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Hierarchy;
 import org.olap4j.metadata.Level;
+import org.olap4j.metadata.Measure;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Member.TreeOp;
+import org.olap4j.metadata.MetadataElement;
+import org.olap4j.metadata.NamedList;
 import org.olap4j.metadata.NamedSet;
 import org.olap4j.metadata.Property;
 import org.olap4j.metadata.Schema;
+import org.olap4j.metadata.XmlaConstant;
 import org.olap4j.metadata.XmlaConstants;
-
-import java.lang.reflect.*;
-import java.sql.SQLException;
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import static mondrian.olap.Util.filter;
-import static mondrian.xmla.XmlaConstants.*;
-import static mondrian.xmla.XmlaHandler.getExtra;
 
 /**
  * <code>RowsetDefinition</code> defines a rowset, including the columns it
@@ -885,11 +909,13 @@ public enum RowsetDefinition {
             MdschemaMeasuresRowset.MeasureCaption,
             MdschemaMeasuresRowset.MeasureGuid,
             MdschemaMeasuresRowset.MeasureAggregator,
+            MdschemaMeasuresRowset.MeasureGroupName,
             MdschemaMeasuresRowset.DataType,
             MdschemaMeasuresRowset.MeasureIsVisible,
             MdschemaMeasuresRowset.LevelsList,
             MdschemaMeasuresRowset.Description,
             MdschemaMeasuresRowset.FormatString,
+            MdschemaMeasuresRowset.MeasureDisplayFolder,
         },
         new Column[] {
             MdschemaMeasuresRowset.CatalogName,
@@ -902,7 +928,7 @@ public enum RowsetDefinition {
             return new MdschemaMeasuresRowset(request, handler);
         }
     },
-
+    
     /**
      *
      * http://msdn2.microsoft.com/es-es/library/ms126046.aspx
@@ -1084,7 +1110,44 @@ public enum RowsetDefinition {
         public Rowset getRowset(XmlaRequest request, XmlaHandler handler) {
             return new MdschemaSetsRowset(request, handler);
         }
-    };
+    },
+    
+    /*MDSCHEMA_MEASUREGROUPS(
+            21, "C8B522DC-5CF3-11CE-ADE5-00AA0044773D", null,
+            new Column[] {
+                MdschemaMeasureGroupsRowset.CatalogName,
+                MdschemaMeasureGroupsRowset.SchemaName,
+                MdschemaMeasureGroupsRowset.CubeName,
+                MdschemaMeasureGroupsRowset.MeasureGroupName,
+                //MdschemaMeasureGroupsRowset.MeasureGroupCaption,
+                //MdschemaMeasureGroupsRowset.Description,
+                //MdschemaMeasureGroupsRowset.IsWriteEnabled,
+        },
+        new Column[] {
+            })
+        {
+            public Rowset getRowset(XmlaRequest request, XmlaHandler handler) {
+                return new MdschemaMeasureGroupsRowset(request, handler);
+            }
+        },
+        MDSCHEMA_MEASUREGROUP_DIMENSIONS(
+                22, "C8B522DC-5CF3-11CE-ADE5-00AA0044773D", null,
+                new Column[] {
+                    MdschemaMeasureGroupDimensionsRowset.CatalogName,
+                    MdschemaMeasureGroupDimensionsRowset.SchemaName,
+                    MdschemaMeasureGroupDimensionsRowset.CubeName,
+                    MdschemaMeasureGroupDimensionsRowset.MeasureGroupName,
+                    MdschemaMeasureGroupDimensionsRowset.DimensionUniqueName,
+                    MdschemaMeasureGroupDimensionsRowset.DimensionVisibility,
+            },
+            new Column[] {
+                })
+            {
+                public Rowset getRowset(XmlaRequest request, XmlaHandler handler) {
+                    return new MdschemaMeasureGroupDimensionsRowset(request, handler);
+                }
+            },*/
+    ;
 
     transient final Column[] columnDefinitions;
     transient final Column[] sortColumnDefinitions;
@@ -1098,6 +1161,7 @@ public enum RowsetDefinition {
     private static final String dateModified = "2005-01-25T17:35:32";
     private final String description;
     private final String schemaUuid;
+    private final Integer ordinal;
 
     static final String UUID_PATTERN =
         "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
@@ -1118,7 +1182,7 @@ public enum RowsetDefinition {
         Column[] columnDefinitions,
         Column[] sortColumnDefinitions)
     {
-        Util.discard(ordinal);
+        this.ordinal = ordinal;
         this.schemaUuid = uuid;
         this.description = description;
         this.columnDefinitions = columnDefinitions;
@@ -1127,6 +1191,11 @@ public enum RowsetDefinition {
 
     public abstract Rowset getRowset(XmlaRequest request, XmlaHandler handler);
 
+    public Integer getOrdinal()
+    {
+        return ordinal;
+    }
+    
     public Column lookupColumn(String name) {
         for (Column columnDefinition : columnDefinitions) {
             if (columnDefinition.name.equals(name)) {
@@ -1720,7 +1789,7 @@ public enum RowsetDefinition {
                         RowsetDefinition o1,
                         RowsetDefinition o2)
                     {
-                        return o1.name().compareTo(o2.name());
+                        return o1.getOrdinal().compareTo(o2.getOrdinal());
                     }
                 });
             for (RowsetDefinition rowsetDefinition : rowsetDefinitions) {
@@ -5158,6 +5227,22 @@ TODO: see above
                 Column.NOT_RESTRICTION,
                 Column.OPTIONAL,
                 "The default format string for the measure.");
+        private static final Column MeasureGroupName =
+                new Column(
+                "MEASUREGROUP_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "The name of the measure group.");
+        private static final Column MeasureDisplayFolder =
+                new Column(
+                "MEASURE_DISPLAY_FOLDER",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "Display Folder.");
 
         public void populateImpl(
             XmlaResponse response,
@@ -5267,6 +5352,14 @@ TODO: see above
             row.set(MeasureUniqueName.name, member.getUniqueName());
             row.set(MeasureCaption.name, member.getCaption());
             //row.set(MeasureGuid.name, "");
+           // row.set(MeasureGroupName.name, "TestGruppe");
+            if(member instanceof MondrianOlap4jMeasure)
+            {
+                String folder = ((MondrianOlap4jMeasure)member).getFolder();
+                if(folder != null) {                    
+                    row.set(MeasureDisplayFolder.name, folder);
+                }
+            };
 
             final XmlaHandler.XmlaExtra extra = getExtra(connection);
             row.set(MeasureAggregator.name, extra.getMeasureAggregator(member));
@@ -5307,7 +5400,165 @@ TODO: see above
             }
         }
     }
+    
+   /* public static class MdschemaMeasureGroupsRowset extends Rowset {
 
+        MdschemaMeasureGroupsRowset(XmlaRequest request, XmlaHandler handler) {
+            super(MDSCHEMA_MEASUREGROUPS, request, handler);
+        }
+
+        private static final Column CatalogName =
+            new Column(
+                "CATALOG_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "The name of the catalog to which this measure belongs.");
+        private static final Column SchemaName =
+            new Column(
+                "SCHEMA_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "The name of the schema to which this measure belongs.");
+        private static final Column CubeName =
+            new Column(
+                "CUBE_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The name of the cube to which this measure belongs.");
+        private static final Column MeasureGroupName =
+            new Column(
+                "MEASUREGROUP_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The name of the measure group.");
+        private static final Column MeasureGroupCaption =
+            new Column(
+                "MEASUREGROUP_CAPTION",
+                Type.String,
+                null,
+                Column.NOT_RESTRICTION,
+                Column.REQUIRED,
+                "A label or caption associated with the measure.");
+        private static final Column Description =
+            new Column(
+                "DESCRIPTION",
+                Type.String,
+                null,
+                Column.NOT_RESTRICTION,
+                Column.OPTIONAL,
+                "A human-readable description of the measure.");
+        private static final Column IsWriteEnabled =
+                new Column(
+                    "IS_WRITE_ENABLED",
+                    Type.Boolean,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "Indicates whether the measure group is write-enabled.");        
+        
+        @Override
+        protected void populateImpl(XmlaResponse response,
+                OlapConnection connection, List<Row> rows)
+                throws XmlaException, SQLException {
+            
+            Row row = new Row();
+            row.set(CatalogName.name, null);
+            //row.set(SchemaName.name, "Schemaname");
+            row.set(CubeName.name, "data");
+            row.set(MeasureGroupName.name, "TestGruppe");
+            row.set(MeasureGroupCaption.name, "TestGruppe");
+            row.set(IsWriteEnabled.name, Boolean.FALSE);
+            rows.add(row);
+        }
+    }
+    
+    public static class MdschemaMeasureGroupDimensionsRowset extends Rowset {
+
+        MdschemaMeasureGroupDimensionsRowset(XmlaRequest request, XmlaHandler handler) {
+            super(MDSCHEMA_MEASUREGROUP_DIMENSIONS, request, handler);
+        }
+
+        private static final Column CatalogName =
+            new Column(
+                "CATALOG_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "The name of the catalog to which this measure belongs.");
+        private static final Column SchemaName =
+            new Column(
+                "SCHEMA_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "The name of the schema to which this measure belongs.");
+        private static final Column CubeName =
+            new Column(
+                "CUBE_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The name of the cube to which this measure belongs.");
+        private static final Column MeasureGroupName =
+            new Column(
+                "MEASUREGROUP_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The name of the measure group.");
+        private static final Column DimensionUniqueName =
+            new Column(
+                "DIMENSION_UNIQUE_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The unique name for the dimension.");
+        private static final Column Description =
+            new Column(
+                "DESCRIPTION",
+                Type.String,
+                null,
+                Column.NOT_RESTRICTION,
+                Column.OPTIONAL,
+                "A human-readable description of the measure.");
+        private static final Column DimensionVisibility =
+                new Column(
+                    "DIMENSION_VISIBILITY",
+                    Type.UnsignedShort,
+                    null,
+                    Column.RESTRICTION,
+                    Column.OPTIONAL,
+                    "Visibility.");        
+        
+        @Override
+        protected void populateImpl(XmlaResponse response,
+                OlapConnection connection, List<Row> rows)
+                throws XmlaException, SQLException {
+            
+            Row row = new Row();
+            row.set(CatalogName.name, null);
+            //row.set(SchemaName.name, "Schemaname");
+            row.set(CubeName.name, "data");
+            row.set(MeasureGroupName.name, "TestGruppe");
+            row.set(DimensionUniqueName.name, "[Measures]");
+            row.set(DimensionVisibility.name, 1);
+            rows.add(row);
+        }
+    }*/
+    
     static class MdschemaMembersRowset extends Rowset {
         private final Util.Functor1<Boolean, Catalog> catalogCond;
         private final Util.Functor1<Boolean, Schema> schemaNameCond;

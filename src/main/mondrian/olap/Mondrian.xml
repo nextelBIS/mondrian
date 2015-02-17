@@ -390,6 +390,11 @@ Revision is $Id$
                 Unique name of the measure within its cube.
             </Doc>
         </Attribute>
+        <Attribute name="folder">
+            <Doc>
+                Display folder of the measure within its cube.
+            </Doc>
+        </Attribute>
         <Attribute name="visible" type="Boolean" required="false">
             <Doc>
                 Whether this member is visible in the user-interface.
@@ -1014,6 +1019,12 @@ Revision is $Id$
         <Attribute name="description" required="false">
             <Doc>
                 Description of this measure.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+        </Attribute>
+        <Attribute name="folder" required="false">
+            <Doc>
+                Display folder of this measure.
                 Can be localized from Properties file using #{propertyname}.
             </Doc>
         </Attribute>
