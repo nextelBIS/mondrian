@@ -246,6 +246,8 @@ TOKEN :
     | <WHERE: "WHERE">
     | <XOR: "XOR">
     | <WITH: "WITH">
+    | <REFRESH: "REFRESH">
+    | <CUBE: "CUBE">
 }
 
 // White space
@@ -963,6 +965,7 @@ List<Exp> expList() :
 // <statement> ::= <selectStatement>
 //                   | <drillthroughStatement>
 //                   | <explainStatement>
+//					 | <refreshStatement>
 //
 // <selectStatement> ::= [WITH <formulaSpecification>]
 //                         SELECT [<axisSpecification>
@@ -980,6 +983,8 @@ List<Exp> expList() :
 //
 // <explainStatement> ::=
 //     EXPLAIN PLAN FOR ( <selectStatement> | <drillthroughStatement> )
+// <refreshStatement> ::=
+//     REFRESH CUBE [<cubeSpecification>]
 //
 QueryPart statement() :
 {
@@ -992,6 +997,8 @@ QueryPart statement() :
         qp = drillthroughStatement()
     |
         qp = explainStatement()
+    |
+        qp = refreshStatement()
     )
     {
         return qp;
@@ -1289,6 +1296,17 @@ QueryPart explainStatement() :
     )
     {
         return factory.makeExplain(qp);
+    }
+}
+
+QueryPart refreshStatement() :
+{
+    QueryPart qp;
+}
+{
+    <REFRESH> <CUBE> c = compoundId()
+    {
+        return factory.makeRefresh(qp);
     }
 }
 
