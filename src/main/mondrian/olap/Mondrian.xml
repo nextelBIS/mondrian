@@ -787,6 +787,12 @@ Revision is $Id$
                 members.
             </Doc>
         </Attribute>
+        <Attribute name="multiMapping" type="Boolean" default="false" required="false">
+            <Doc>
+               This level allows multiple mapping for one fact table entry.
+               MINUBO_MONDRIAN_CHANGE
+            </Doc>
+        </Attribute>
         <Object name="annotations" type="Annotations" required="false">
             <Doc>Contains values of user-defined properties.</Doc>
         </Object>
