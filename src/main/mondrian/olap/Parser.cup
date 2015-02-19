@@ -192,6 +192,12 @@ parser code {:
         {
             return new Explain(query);
         }
+        
+        public Refresh makeRefresh(
+            String cube)
+        {
+            return new Refresh(cube);
+        }
     }
 
     // Override lr_parser methods for NLS.  With this error handling scheme,
@@ -359,6 +365,8 @@ terminal
     WHERE,
     XOR,
     WITH,
+    REFRESH,
+    CUBE,
     _VALUE_EXPRESSION;
 
 // b. Symbols
@@ -420,7 +428,8 @@ non terminal QueryPart
     statement,
     select_or_drillthrough_statement,
     drillthrough_statement,
-    explain_statement;
+    explain_statement,
+    refresh_statement;
 non terminal Id
     bang_compound_id,
     cell_property,
@@ -1356,6 +1365,7 @@ aliasedExpression ::=
 //                   | <drop_formula_statement>
 //                   | <drillthrough_statement>
 //                   | <explain_statement>
+//					 | <refresh_statement>
 //
 // <select_statement> ::= [WITH <formula_specification>]
 //                         SELECT [<axis_specification>
@@ -1374,11 +1384,14 @@ aliasedExpression ::=
 // <explain_statement> ::=
 //    EXPLAIN PLAN FOR
 //    ( <select_statement> | <drillthrough_statement> )
+// <refresh_statement> ::=
+//    REFRESH CUBE [<cube_specification>]
 
 statement ::=
         select_statement
     |   drillthrough_statement
     |   explain_statement
+    |   refresh_statement
     |   _VALUE_EXPRESSION expression:e {:
             RESULT = (QueryPart) e;
         :}
@@ -1753,6 +1766,14 @@ explain_statement ::=
         EXPLAIN PLAN FOR select_or_drillthrough_statement:s {:
             RESULT = parser.factory.makeExplain(
                 s);
+        :}
+   ;
+
+refresh_statement ::=
+        REFRESH CUBE cube_specification:c {:
+        	String cubeName = ((Id.NameSegment) c.getElement(0)).name;
+            RESULT = parser.factory.makeRefresh(
+                cubeName);
         :}
    ;
 
