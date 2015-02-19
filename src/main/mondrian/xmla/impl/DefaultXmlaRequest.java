@@ -41,6 +41,7 @@ public class DefaultXmlaRequest
     /* EXECUTE content */
     private String statement;
     private boolean drillthrough;
+    private boolean isRefresh;
 
     /* DISCOVER contnet */
     private String requestType;
@@ -120,7 +121,14 @@ public class DefaultXmlaRequest
         }
         return drillthrough;
     }
-
+    
+    public boolean isRefresh() {
+        if (method != Method.EXECUTE) {
+            throw new IllegalStateException(
+                "Only METHOD_EXECUTE determines drillthrough");
+        }
+        return isRefresh;
+    }
 
     protected final void init(Element xmlaRoot) throws XmlaException {
         if (NS_XMLA.equals(xmlaRoot.getNamespaceURI())) {
@@ -404,6 +412,7 @@ public class DefaultXmlaRequest
         }
         statement = XmlaUtil.textInElement(childElems[0]).replaceAll("\\r", "");
         drillthrough = statement.toUpperCase().indexOf("DRILLTHROUGH") != -1;
+        isRefresh = statement.toUpperCase().indexOf("REFRESH CUBE ") != -1;
     }
 }
 

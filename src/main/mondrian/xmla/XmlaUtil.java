@@ -354,6 +354,10 @@ way too noisy
             public boolean isDrillThrough() {
                 throw new UnsupportedOperationException();
             }
+            
+            public boolean isRefresh() {
+                throw new UnsupportedOperationException();
+            }
 
             public Format getFormat() {
                 throw new UnsupportedOperationException();

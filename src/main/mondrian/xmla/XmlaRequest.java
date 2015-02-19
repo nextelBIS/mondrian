@@ -58,6 +58,12 @@ public interface XmlaRequest {
      * EXECUTE method.
      */
     boolean isDrillThrough();
+    
+    /**
+     * Indicate whether statement is a refesh cube statement of
+     * EXECUTE method.
+     */
+    boolean isRefresh();
 
     /**
      * The username to use to open the underlying olap4j connection.

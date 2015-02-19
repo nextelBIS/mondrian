@@ -6781,6 +6781,10 @@ TODO: see above
         public boolean isDrillThrough() {
             return request.isDrillThrough();
         }
+        
+        public boolean isRefresh() {
+            return request.isRefresh();
+        }
 
         public String getUsername() {
             return request.getUsername();
