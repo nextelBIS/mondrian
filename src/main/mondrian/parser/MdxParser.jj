@@ -1301,13 +1301,12 @@ QueryPart explainStatement() :
 
 QueryPart refreshStatement() :
 {
-    Id c;
+    QueryPart qp;
 }
 {
     <REFRESH> <CUBE> c = compoundId()
     {
-    	String cubeName = ((Id.NameSegment) c.getElement(0)).name;
-        return factory.makeRefresh(cubeName);
+        return factory.makeRefresh(qp);
     }
 }
 
