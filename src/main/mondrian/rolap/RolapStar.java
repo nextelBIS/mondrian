@@ -837,8 +837,6 @@ public class RolapStar {
 				bitKey.set(column.getBitPosition(), true);
 			}
 		}
-    	
-    	System.out.println("Created exclusion bitkey: " + bitKey);
 		return bitKey;
     }
     
