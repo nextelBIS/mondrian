@@ -48,7 +48,6 @@ public class MemberKeyConstraint
     {
         for (int i = 0; i < columnList.size(); i++) {
             MondrianDef.Expression expression = columnList.get(i);
-            if(expression != null) {
                 final Comparable value = valueList.get(i);
                 final Dialect.Datatype datatype = datatypeList.get(i);
                 sqlQuery.addWhere(
@@ -57,7 +56,6 @@ public class MemberKeyConstraint
                         expression,
                         datatype,
                         value));
-            }
         }
     }
 
