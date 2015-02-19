@@ -70,6 +70,9 @@ public interface MdxParserValidator {
          */
         Explain makeExplain(
             QueryPart query);
+        
+        Refresh makeRefresh(String cube);
+            
     }
 }
 

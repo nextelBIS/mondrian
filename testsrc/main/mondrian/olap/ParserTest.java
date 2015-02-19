@@ -1066,6 +1066,10 @@ public class ParserTest extends FoodMartTestCase {
             this.explain = true;
             return null;
         }
+        
+        public Refresh makeRefresh(String cube) {
+            return null;
+        }
 
         public QueryAxis[] getAxes() {
             return axes;

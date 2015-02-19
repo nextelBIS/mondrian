@@ -22,7 +22,7 @@
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
 	<classpathentry kind="lib" path="lib/olap4j-tck.jar"/>
 	<classpathentry kind="lib" path="lib/olap4j-xmla.jar"/>
-	<classpathentry kind="lib" path="lib/olap4j.jar"/>
+	<classpathentry kind="lib" path="lib/olap4j.jar" sourcepath="/home/rkorba/olap4j"/>
 	<classpathentry kind="lib" path="lib/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/validation-api.jar"/>
 	<classpathentry kind="lib" path="lib/xalan.jar"/>
