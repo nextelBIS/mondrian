@@ -826,6 +826,22 @@ public class RolapStar {
         this.changeListener = changeListener;
     }
 
+    /**
+     * MINUBO_MONDRIAN_CHANGE
+     * @return
+     */
+    public BitKey getN2MColumnBitKey() {
+    	BitKey bitKey = BitKey.Factory.makeBitKey(getColumnCount());
+    	for (Column column : columnList) {
+			if (column.isN2MColumn) {
+				bitKey.set(column.getBitPosition(), true);
+			}
+		}
+    	
+    	System.out.println("Created exclusion bitkey: " + bitKey);
+		return bitKey;
+    }
+    
     // -- Inner classes --------------------------------------------------------
 
     /**
@@ -850,6 +866,9 @@ public class RolapStar {
         private final SqlStatement.Type internalType;
         private final String name;
 
+        //MINUBO_MONDRIAN_CHANGE
+        private boolean isN2MColumn;
+        
         /**
          * When a Column is a column, and not a Measure, the parent column
          * is the coloumn associated with next highest Level.
@@ -889,7 +908,7 @@ public class RolapStar {
         {
             this(
                 name, table, expression, datatype, null, null,
-                null, null, Integer.MIN_VALUE, table.star.nextColumnCount());
+                null, null, Integer.MIN_VALUE, table.star.nextColumnCount(), false);
         }
 
         private Column(
@@ -902,7 +921,8 @@ public class RolapStar {
             Column parentColumn,
             String usagePrefix,
             int approxCardinality,
-            int bitPosition)
+            int bitPosition,
+            boolean isN2MColumn)
         {
             this.name = name;
             this.table = table;
@@ -922,6 +942,8 @@ public class RolapStar {
             if (table != null) {
                 table.star.addColumn(this);
             }
+            //MINUBO_MONDRIAN_CHANGE
+            this.isN2MColumn = isN2MColumn;
         }
 
         /**
@@ -941,7 +963,8 @@ public class RolapStar {
                 null,
                 null,
                 Integer.MIN_VALUE,
-                0);
+                0,
+                false);
         }
 
         public boolean equals(Object obj) {
@@ -1580,7 +1603,8 @@ public class RolapStar {
                     parentColumn,
                     usagePrefix,
                     level.getApproxRowCount(),
-                    star.nextColumnCount());
+                    star.nextColumnCount(),
+                    level.isN2MValue()); //MINUBO_MONDRIAN_CHANGE
                 addColumn(column);
             }
             return column;

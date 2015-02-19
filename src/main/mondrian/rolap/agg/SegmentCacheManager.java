@@ -1542,8 +1542,9 @@ public class SegmentCacheManager {
                 + System.identityHashCode(star));
 
             if (!indexes.containsKey(star.getSchema().getChecksum())) {
+            	//MINUBO_MONDRIAN_CACHE
                 final SegmentCacheIndexImpl index =
-                    new SegmentCacheIndexImpl(thread);
+                    new SegmentCacheIndexImpl(thread, star.getN2MColumnBitKey());
                 LOGGER.trace(
                     "SegmentCacheManager.SegmentCacheIndexRegistry.getIndex:"
                     + "Creating New Index "

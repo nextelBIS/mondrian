@@ -134,7 +134,7 @@ public class RolapHierarchy extends HierarchyBase {
                     null,
                     RolapLevel.HideMemberCondition.Never,
                     LevelType.Regular,
-                    "",
+                    "", false,
                     Collections.<String, Annotation>emptyMap());
         } else {
             this.levels = new RolapLevel[0];
@@ -163,7 +163,7 @@ public class RolapHierarchy extends HierarchyBase {
                 null,
                 RolapLevel.HideMemberCondition.Never,
                 LevelType.Null,
-                "",
+                "", false,
                 Collections.<String, Annotation>emptyMap());
     }
 
@@ -231,7 +231,7 @@ public class RolapHierarchy extends HierarchyBase {
                 null,
                 null,
                 RolapLevel.HideMemberCondition.Never,
-                LevelType.Regular, ALL_LEVEL_CARDINALITY,
+                LevelType.Regular, ALL_LEVEL_CARDINALITY,false,
                 Collections.<String, Annotation>emptyMap());
         allLevel.init(xmlCubeDimension);
         this.allMember = new RolapMemberBase(
@@ -271,6 +271,7 @@ public class RolapHierarchy extends HierarchyBase {
                     throw MondrianResource.instance()
                         .LevelMustHaveNameExpression.ex(xmlLevel.name);
                 }
+                
                 levels[i + 1] = new RolapLevel(this, i + 1, xmlLevel);
             }
         } else {
@@ -448,7 +449,7 @@ public class RolapHierarchy extends HierarchyBase {
                 null,
                 RolapLevel.HideMemberCondition.Never,
                 LevelType.Regular,
-                "",
+                "",false,
                 Collections.<String, Annotation>emptyMap());
         this.levels = Util.append(this.levels, level);
         return level;
@@ -1148,7 +1149,7 @@ public class RolapHierarchy extends HierarchyBase {
                 null,
                 src.getHideMemberCondition(),
                 src.getLevelType(),
-                "",
+                "", false, //MINUBO_MONDRIAN_CHANGE
                 Collections.<String, Annotation>emptyMap());
         peerHier.levels = Util.append(peerHier.levels, level);
 
@@ -1179,7 +1180,7 @@ public class RolapHierarchy extends HierarchyBase {
             src.getInternalType(),
             src.getHideMemberCondition(),
             src.getLevelType(),
-            "",
+            "", false,
             Collections.<String, Annotation>emptyMap());
         peerHier.levels = Util.append(peerHier.levels, sublevel);
 
