@@ -365,8 +365,6 @@ terminal
     WHERE,
     XOR,
     WITH,
-    REFRESH,
-    CUBE,
     _VALUE_EXPRESSION;
 
 // b. Symbols
