@@ -425,8 +425,8 @@ public enum RowsetDefinition {
         }
     },
 
-   /* DBSCHEMA_SCHEMATA(
-        8, "", null,
+    DBSCHEMA_SCHEMATA(
+        8, "C8B5222C-5CF3-11CE-ADE5-00AA0044773D", null,
         new Column[] {
             DbschemaSchemataRowset.CatalogName,
             DbschemaSchemataRowset.SchemaName,
@@ -441,7 +441,7 @@ public enum RowsetDefinition {
         public Rowset getRowset(XmlaRequest request, XmlaHandler handler) {
             return new DbschemaSchemataRowset(request, handler);
         }
-    },*/
+    },
 
     /**
      * http://msdn2.microsoft.com/en-us/library/ms126299(SQL.90).aspx
@@ -2978,74 +2978,74 @@ TODO: see above
         }
     }
 
-//    static class DbschemaSchemataRowset extends Rowset {
-//        private final Util.Functor1<Boolean, Catalog> catalogNameCond;
-//
-//        DbschemaSchemataRowset(XmlaRequest request, XmlaHandler handler) {
-//            super(DBSCHEMA_SCHEMATA, request, handler);
-//            catalogNameCond = makeCondition(CATALOG_NAME_GETTER, CatalogName);
-//        }
-//
-//        /*
-//         * These are the columns returned by SQL Server.
-//         */
-//        private static final Column CatalogName =
-//            new Column(
-//                "CATALOG_NAME",
-//                Type.String,
-//                null,
-//                Column.RESTRICTION,
-//                Column.REQUIRED,
-//                "The provider-specific data type name.");
-//        private static final Column SchemaName =
-//            new Column(
-//                "SCHEMA_NAME",
-//                Type.String,
-//                null,
-//                Column.RESTRICTION,
-//                Column.REQUIRED,
-//                "The indicator of the data type.");
-//        private static final Column SchemaOwner =
-//            new Column(
-//                "SCHEMA_OWNER",
-//                Type.String,
-//                null,
-//                Column.RESTRICTION,
-//                Column.REQUIRED,
-//                "The length of a non-numeric column. If the data type is "
-//                + "numeric, this is the upper bound on the maximum precision "
-//                + "of the data type.");
-//
-//        public void populateImpl(
-//            XmlaResponse response,
-//            OlapConnection connection,
-//            List<Row> rows)
-//            throws XmlaException, OlapException
-//        {
-//            for (Catalog catalog
-//                : catIter(connection, catalogNameCond, catNameCond()))
-//            {
-//                for (Schema schema : catalog.getSchemas()) {
-//                    Row row = new Row();
-//                    row.set(CatalogName.name, catalog.getName());
-//                    row.set(SchemaName.name, schema.getName());
-//                    row.set(SchemaOwner.name, "");
-//                    addRow(row, rows);
-//                }
-//            }
-//        }
-//
-//        protected void setProperty(
-//            PropertyDefinition propertyDef, String value)
-//        {
-//            switch (propertyDef) {
-//            case Content:
-//                break;
-//            default:
-//                super.setProperty(propertyDef, value);
-//            }
-//        }
-//    }
+    static class DbschemaSchemataRowset extends Rowset {
+        private final Util.Functor1<Boolean, Catalog> catalogNameCond;
+
+        DbschemaSchemataRowset(XmlaRequest request, XmlaHandler handler) {
+            super(DBSCHEMA_SCHEMATA, request, handler);
+            catalogNameCond = makeCondition(CATALOG_NAME_GETTER, CatalogName);
+        }
+
+        /*
+         * These are the columns returned by SQL Server.
+         */
+        private static final Column CatalogName =
+            new Column(
+                "CATALOG_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The provider-specific data type name.");
+        private static final Column SchemaName =
+            new Column(
+                "SCHEMA_NAME",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The indicator of the data type.");
+        private static final Column SchemaOwner =
+            new Column(
+                "SCHEMA_OWNER",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.REQUIRED,
+                "The length of a non-numeric column. If the data type is "
+                + "numeric, this is the upper bound on the maximum precision "
+                + "of the data type.");
+
+        public void populateImpl(
+            XmlaResponse response,
+            OlapConnection connection,
+            List<Row> rows)
+            throws XmlaException, OlapException
+        {
+            for (Catalog catalog
+                : catIter(connection, catalogNameCond, catNameCond()))
+            {
+                for (Schema schema : catalog.getSchemas()) {
+                    Row row = new Row();
+                    row.set(CatalogName.name, catalog.getName());
+                    row.set(SchemaName.name, schema.getName());
+                    row.set(SchemaOwner.name, "");
+                    addRow(row, rows);
+                }
+            }
+        }
+
+        protected void setProperty(
+            PropertyDefinition propertyDef, String value)
+        {
+            switch (propertyDef) {
+            case Content:
+                break;
+            default:
+                super.setProperty(propertyDef, value);
+            }
+        }
+    }
 
     static class DbschemaTablesRowset extends Rowset {
         private final Util.Functor1<Boolean, Catalog> tableCatalogCond;
