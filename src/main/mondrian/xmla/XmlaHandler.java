@@ -756,7 +756,7 @@ public class XmlaHandler {
             if (request.isDrillThrough()) {
                 result = executeDrillThroughQuery(request);
             } else if (request.isRefresh()) {
-                result = new EmptyQueryResult();
+                result = null;
             } else {
                 result = executeQuery(request);
             }
@@ -1637,25 +1637,6 @@ public class XmlaHandler {
         }
     }
     
-    
-    static class EmptyQueryResult implements QueryResult {
-
-        public void close() {
-            // no resources to close
-        }
-
-        public void unparse(SaxWriter writer) throws SAXException {
-        }
-
-        /**
-         * Writes the tabular drillthrough schema
-         *
-         * @param writer Writer
-         */
-        public void metadata(SaxWriter writer) {
-        }
-    }
-
     /**
      * Converts a SQL type to XSD type.
      *
