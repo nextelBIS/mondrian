@@ -664,6 +664,7 @@ public enum RowsetDefinition {
             MdschemaDimensionsRowset.IsReadWrite,
             MdschemaDimensionsRowset.DimensionUniqueSettings,
             MdschemaDimensionsRowset.DimensionMasterUniqueName,
+            MdschemaDimensionsRowset.DimensionMasterName,
             MdschemaDimensionsRowset.DimensionIsVisible,
             MdschemaDimensionsRowset.Hierarchies,
         },
@@ -2297,9 +2298,9 @@ public enum RowsetDefinition {
 
                     // TODO: currently schema grammar does not support modify
                     // date so we return just some date for now.
-                    if (false) {
+                    //if (false) {
                         row.set(DateModified.name, dateModified);
-                    }
+                    //}
                     addRow(row, rows);
                 }
             }
@@ -3973,6 +3974,14 @@ TODO: see above
                 Column.NOT_RESTRICTION,
                 Column.OPTIONAL,
                 "Always NULL.");
+        private static final Column DimensionMasterName =
+                new Column(
+                    "DIMENSION_MASTER_NAME",
+                    Type.String,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "Always NULL.");
         private static final Column DimensionIsVisible =
             new Column(
                 "DIMENSION_IS_VISIBLE",
@@ -4051,11 +4060,11 @@ TODO: see above
 
             Row row = new Row();
             row.set(CatalogName.name, catalog.getName());
-            row.set(SchemaName.name, cube.getSchema().getName());
+            //row.set(SchemaName.name, cube.getSchema().getName());
             row.set(CubeName.name, cube.getName());
             row.set(DimensionName.name, dimension.getName());
             row.set(DimensionUniqueName.name, dimension.getUniqueName());
-            row.set(DimensionCaption.name, dimension.getCaption());
+            row.set(DimensionCaption.name, "bla");
             row.set(
                 DimensionOrdinal.name, cube.getDimensions().indexOf(dimension));
             row.set(DimensionType.name, getDimensionType(dimension));
@@ -4088,15 +4097,16 @@ TODO: see above
             row.set(DimensionCardinality.name, n + 1);
 
             // TODO: I think that this is just the dimension name
-            row.set(DefaultHierarchy.name, dimension.getUniqueName());
-            row.set(Description.name, desc);
+            row.set(DefaultHierarchy.name, "[visit].[country]");
+            row.set(Description.name, "");
             row.set(IsVirtual.name, false);
             // SQL Server always returns false
             row.set(IsReadWrite.name, false);
             // TODO: don't know what to do here
             // Are these the levels with uniqueMembers == true?
             // How are they mapped to specific column numbers?
-            row.set(DimensionUniqueSettings.name, 0);
+            row.set(DimensionUniqueSettings.name, 1);
+            row.set(DimensionMasterName.name, "DIM Visit");
             row.set(DimensionIsVisible.name, dimension.isVisible());
             if (deep) {
                 row.set(
@@ -4532,6 +4542,46 @@ TODO: see above
                 Column.NOT_RESTRICTION,
                 Column.OPTIONAL,
                 "Levels in this hierarchy.");
+        private static final Column HierarchyOrigin =
+                new Column(
+                    "HIERARCHY_ORIGIN",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "HIERARCHY_ORIGIN.");
+        private static final Column HierarchyDisplayFolder =
+                new Column(
+                    "HIERARCHY_DISPLAY_FOLDER",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "HIERARCHY_DISPLAY_FOLDER.");
+        private static final Column InstanceSelection =
+                new Column(
+                    "INSTANCE_SELECTION",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "INSTANCE_SELECTION.");
+        private static final Column GroupingBehavior =
+                new Column(
+                    "GROUPING_BEHAVIOR",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "GROUPING_BEHAVIOR.");
+        private static final Column StructureType =
+                new Column(
+                    "STRUCTURE_TYPE",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "STRUCTURE_TYPE.");
 
 
         /*
@@ -4636,14 +4686,14 @@ TODO: see above
 
             Row row = new Row();
             row.set(CatalogName.name, catalog.getName());
-            row.set(SchemaName.name, cube.getSchema().getName());
+            //row.set(SchemaName.name, cube.getSchema().getName());
             row.set(CubeName.name, cube.getName());
             row.set(DimensionUniqueName.name, dimension.getUniqueName());
             row.set(HierarchyName.name, hierarchy.getName());
             row.set(HierarchyUniqueName.name, hierarchy.getUniqueName());
             //row.set(HierarchyGuid.name, "");
 
-            row.set(HierarchyCaption.name, hierarchy.getCaption());
+            row.set(HierarchyCaption.name, "Land");
             row.set(DimensionType.name, getDimensionType(dimension));
             // The number of members in the hierarchy. Because
             // of the presence of multiple hierarchies, this number
@@ -4673,17 +4723,21 @@ TODO: see above
             row.set(IsReadWrite.name, false);
 
             // NOTE that SQL Server returns '0' not '1'.
-            row.set(DimensionUniqueSettings.name, 0);
+            row.set(DimensionUniqueSettings.name, 1);
 
             row.set(DimensionIsVisible.name, dimension.isVisible());
-            row.set(HierarchyIsVisible.name, hierarchy.isVisible());
-
             row.set(HierarchyOrdinal.name, ordinal);
+         // always true
+            row.set(DimensionIsShared.name, true);            
+            row.set(HierarchyIsVisible.name, hierarchy.isVisible());
+            
+            row.set(HierarchyOrigin.name, 2);
+            row.set(HierarchyDisplayFolder.name, "");
+            row.set(InstanceSelection.name, 0);
+            row.set(GroupingBehavior.name, 1);
+            row.set(StructureType.name, "Natural");
 
-            // always true
-            row.set(DimensionIsShared.name, true);
-
-            row.set(ParentChild.name, extra.isHierarchyParentChild(hierarchy));
+            //row.set(ParentChild.name, extra.isHierarchyParentChild(hierarchy));
             if (deep) {
                 row.set(
                     Levels.name,
@@ -4892,6 +4946,38 @@ TODO: see above
                 Column.OPTIONAL,
                 "A human-readable description of the level. NULL if no "
                 + "description exists.");
+        private static final Column LevelOrderingProperty =
+                new Column(
+                    "LEVEL_ORDERING_PROPERTY",
+                    Type.String,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "LEVEL_ORDERING_PROPERTY");
+        private static final Column LevelDbType =
+                new Column(
+                    "LEVEL_DBTYPE",
+                    Type.String,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "LEVEL_DBTYPE");
+        private static final Column LevelKeyCardinality =
+                new Column(
+                    "LEVEL_KEY_CARDINALITY",
+                    Type.String,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "LEVEL_KEY_CARDINALITY");
+        private static final Column LevelOrigin =
+                new Column(
+                    "LEVEL_ORIGIN",
+                    Type.String,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "LEVEL_ORIGIN");
 
         public void populateImpl(
             XmlaResponse response,
@@ -4997,7 +5083,7 @@ TODO: see above
 
             Row row = new Row();
             row.set(CatalogName.name, catalog.getName());
-            row.set(SchemaName.name, cube.getSchema().getName());
+           // row.set(SchemaName.name, cube.getSchema().getName());
             row.set(CubeName.name, cube.getName());
             row.set(
                 DimensionUniqueName.name,
@@ -5017,6 +5103,7 @@ TODO: see above
             row.set(LevelCardinality.name, n);
 
             row.set(LevelType.name, getLevelType(level));
+            row.set(Description.name, "");
 
             // TODO: most of the time this is correct
             row.set(CustomRollupSettings.name, 0);
@@ -5028,9 +5115,14 @@ TODO: see above
             if (extra.isLevelUnique(level)) {
                 uniqueSettings |= 1;
             }
-            row.set(LevelUniqueSettings.name, uniqueSettings);
+            row.set(LevelUniqueSettings.name, 0);
             row.set(LevelIsVisible.name, level.isVisible());
-            row.set(Description.name, desc);
+            
+            row.set(LevelOrderingProperty.name, "(All)");
+            row.set(LevelDbType.name, 3);
+            row.set(LevelKeyCardinality.name, 1);
+            row.set(LevelOrigin.name, 2);
+            
             addRow(row, rows);
             return true;
         }
