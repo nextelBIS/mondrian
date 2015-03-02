@@ -1939,13 +1939,14 @@ public enum RowsetDefinition {
                 row.set(PropertyType.name, propertyDefinition.type.getName());
                 row.set(PropertyAccessType.name, propertyDefinition.access);
                 row.set(IsRequired.name, false);
-                row.set(Value.name, propertyDefinition.value);
-                addRow(row, rows);
                 
                 if(propertyDefinition.name().equals(PropertyDefinition.Catalog.name()) &&
                 		  propertyDefinition.value.equals("")) {
                 		 setCatalogPropertyValue(connection);
                 		  }
+                
+                row.set(Value.name, propertyDefinition.value);
+                addRow(row, rows);
             }
         }
 
