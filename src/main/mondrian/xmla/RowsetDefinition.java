@@ -775,9 +775,9 @@ public enum RowsetDefinition {
             MdschemaHierarchiesRowset.IsReadWrite,
             MdschemaHierarchiesRowset.DimensionUniqueSettings,
             MdschemaHierarchiesRowset.DimensionIsVisible,
-            MdschemaHierarchiesRowset.HierarchyIsVisible,
             MdschemaHierarchiesRowset.HierarchyOrdinal,
             MdschemaHierarchiesRowset.DimensionIsShared,
+            MdschemaHierarchiesRowset.HierarchyIsVisible,
             MdschemaHierarchiesRowset.ParentChild,
             MdschemaHierarchiesRowset.Levels,
             MdschemaHierarchiesRowset.HierarchyOrigin,
@@ -853,10 +853,10 @@ public enum RowsetDefinition {
             MdschemaLevelsRowset.LevelNumber,
             MdschemaLevelsRowset.LevelCardinality,
             MdschemaLevelsRowset.LevelType,
+            MdschemaLevelsRowset.Description,
             MdschemaLevelsRowset.CustomRollupSettings,
             MdschemaLevelsRowset.LevelUniqueSettings,
             MdschemaLevelsRowset.LevelIsVisible,
-            MdschemaLevelsRowset.Description,
             MdschemaLevelsRowset.LevelOrderingProperty,
             MdschemaLevelsRowset.LevelDbType,
             MdschemaLevelsRowset.LevelKeyCardinality,
@@ -919,14 +919,14 @@ public enum RowsetDefinition {
             MdschemaMeasuresRowset.MeasureCaption,
             MdschemaMeasuresRowset.MeasureGuid,
             MdschemaMeasuresRowset.MeasureAggregator,
-            MdschemaMeasuresRowset.MeasureGroupName,
             MdschemaMeasuresRowset.DataType,
-            MdschemaMeasuresRowset.MeasureIsVisible,
             MdschemaMeasuresRowset.LevelsList,
             MdschemaMeasuresRowset.Description,
-            MdschemaMeasuresRowset.FormatString,
-            MdschemaMeasuresRowset.MeasureDisplayFolder,
+            MdschemaMeasuresRowset.MeasureIsVisible,
             MdschemaMeasuresRowset.MeasureUnqualifiedCaption,
+            MdschemaMeasuresRowset.MeasureGroupName,
+            MdschemaMeasuresRowset.MeasureDisplayFolder,
+            MdschemaMeasuresRowset.FormatString,
         },
         new Column[] {
             MdschemaMeasuresRowset.CatalogName,
@@ -5102,7 +5102,7 @@ TODO: see above
             row.set(LevelName.name, level.getName());
             row.set(LevelUniqueName.name, level.getUniqueName());
             //row.set(LevelGuid.name, "");
-            row.set(LevelCaption.name, level.getCaption());
+            row.set(LevelCaption.name, "Land");
             // see notes on this #getDepth()
             row.set(LevelNumber.name, level.getDepth());
 
@@ -5128,8 +5128,8 @@ TODO: see above
             row.set(LevelUniqueSettings.name, 0);
             row.set(LevelIsVisible.name, level.isVisible());
             
-            row.set(LevelOrderingProperty.name, "(All)");
-            row.set(LevelDbType.name, 3);
+            row.set(LevelOrderingProperty.name, "Country");
+            row.set(LevelDbType.name, 130);
             row.set(LevelKeyCardinality.name, 1);
             row.set(LevelOrigin.name, 2);
             
