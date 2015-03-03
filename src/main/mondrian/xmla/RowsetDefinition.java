@@ -780,6 +780,11 @@ public enum RowsetDefinition {
             MdschemaHierarchiesRowset.DimensionIsShared,
             MdschemaHierarchiesRowset.ParentChild,
             MdschemaHierarchiesRowset.Levels,
+            MdschemaHierarchiesRowset.HierarchyOrigin,
+            MdschemaHierarchiesRowset.HierarchyDisplayFolder,
+            MdschemaHierarchiesRowset.InstanceSelection,
+            MdschemaHierarchiesRowset.GroupingBehavior,
+            MdschemaHierarchiesRowset.StructureType,
         },
         new Column[] {
             MdschemaHierarchiesRowset.CatalogName,
@@ -852,6 +857,10 @@ public enum RowsetDefinition {
             MdschemaLevelsRowset.LevelUniqueSettings,
             MdschemaLevelsRowset.LevelIsVisible,
             MdschemaLevelsRowset.Description,
+            MdschemaLevelsRowset.LevelOrderingProperty,
+            MdschemaLevelsRowset.LevelDbType,
+            MdschemaLevelsRowset.LevelKeyCardinality,
+            MdschemaLevelsRowset.LevelOrigin
         },
         new Column[] {
             MdschemaLevelsRowset.CatalogName,
@@ -917,6 +926,7 @@ public enum RowsetDefinition {
             MdschemaMeasuresRowset.Description,
             MdschemaMeasuresRowset.FormatString,
             MdschemaMeasuresRowset.MeasureDisplayFolder,
+            MdschemaMeasuresRowset.MeasureUnqualifiedCaption,
         },
         new Column[] {
             MdschemaMeasuresRowset.CatalogName,
@@ -5336,6 +5346,14 @@ TODO: see above
                 Column.RESTRICTION,
                 Column.OPTIONAL,
                 "Display Folder.");
+        private static final Column MeasureUnqualifiedCaption =
+                new Column(
+                "MEASURE_UNQUALIFIED_CAPTION",
+                Type.String,
+                null,
+                Column.RESTRICTION,
+                Column.OPTIONAL,
+                "MEASURE_UNQUALIFIED_CAPTION");
 
         public void populateImpl(
             XmlaResponse response,
@@ -5439,11 +5457,13 @@ TODO: see above
 
             Row row = new Row();
             row.set(CatalogName.name, catalog.getName());
-            row.set(SchemaName.name, cube.getSchema().getName());
+            //row.set(SchemaName.name, cube.getSchema().getName());
             row.set(CubeName.name, cube.getName());
             row.set(MeasureName.name, member.getName());
             row.set(MeasureUniqueName.name, member.getUniqueName());
-            row.set(MeasureCaption.name, member.getCaption());
+            row.set(MeasureCaption.name, "visit-count-flat");
+            row.set(MeasureUnqualifiedCaption.name, "visit-count-flat");
+            
             //row.set(MeasureGuid.name, "");
            // row.set(MeasureGroupName.name, "TestGruppe");
             if(member instanceof MondrianOlap4jMeasure)
@@ -5473,12 +5493,12 @@ TODO: see above
             row.set(DataType.name, dbType.xmlaOrdinal());
             row.set(MeasureIsVisible.name, visible);
 
-            if (levelListStr != null) {
-                row.set(LevelsList.name, levelListStr);
-            }
+//            if (levelListStr != null) {
+//                row.set(LevelsList.name, levelListStr);
+//            }
 
-            row.set(Description.name, desc);
-            row.set(FormatString.name, formatString);
+            row.set(Description.name, "");
+            row.set(FormatString.name, "#,##0");
             addRow(row, rows);
         }
 
