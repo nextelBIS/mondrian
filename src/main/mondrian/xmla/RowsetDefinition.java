@@ -610,7 +610,8 @@ public enum RowsetDefinition {
             MdschemaCubesRowset.Description,
             MdschemaCubesRowset.Dimensions,
             MdschemaCubesRowset.Sets,
-            MdschemaCubesRowset.Measures
+            MdschemaCubesRowset.Measures,
+            MdschemaCubesRowset.CubeSource
         },
         new Column[] {
             MdschemaCubesRowset.CatalogName,
@@ -3703,6 +3704,14 @@ TODO: see above
                 Column.NOT_RESTRICTION,
                 Column.OPTIONAL,
                 "Measures in this cube.");
+        private static final Column CubeSource =
+                new Column(
+                    "CUBE_SOURCE",
+                    Type.Rowset,
+                    null,
+                    Column.NOT_RESTRICTION,
+                    Column.OPTIONAL,
+                    "Cube source.");
 
         public void populateImpl(
             XmlaResponse response,
@@ -3727,7 +3736,7 @@ TODO: see above
 
                         Row row = new Row();
                         row.set(CatalogName.name, catalog.getName());
-                        row.set(SchemaName.name, schema.getName());
+                       // row.set(SchemaName.name, schema.getName());
                         row.set(CubeName.name, cube.getName());
                         final XmlaHandler.XmlaExtra extra =
                             getExtra(connection);
@@ -3740,10 +3749,12 @@ TODO: see above
                         //row.set(DataUpdatedBy.name, "");
                         row.set(IsDrillthroughEnabled.name, true);
                         row.set(IsWriteEnabled.name, false);
-                        row.set(IsLinkable.name, false);
+                        row.set(IsLinkable.name, true);
                         row.set(IsSqlEnabled.name, false);
                         row.set(CubeCaption.name, cube.getCaption());
                         row.set(Description.name, desc);
+                        row.set(CubeSource.name, 1);
+                        
                         Format formatter =
                             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                         String formattedDate =
