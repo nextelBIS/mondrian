@@ -177,7 +177,7 @@ abstract class Rowset implements XmlaConstants {
             }
             // fall through
         default:
-            LOGGER.warn(
+            LOGGER.debug(
                 "Warning: Rowset '" + rowsetDefinition.name()
                 + "' does not support property '" + propertyDef.name()
                 + "' (value is '" + value + "')");

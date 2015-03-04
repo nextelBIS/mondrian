@@ -799,7 +799,7 @@ public abstract class DefaultXmlaServlet extends XmlaServlet {
         }
 
         if (sessionInfo == null) {
-            LOGGER.error(
+            LOGGER.debug(
                 "No login credentials for found for session ["+
                 sessionId + "]");
         } else {
