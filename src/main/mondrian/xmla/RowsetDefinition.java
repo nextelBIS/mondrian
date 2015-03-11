@@ -595,6 +595,7 @@ public enum RowsetDefinition {
             MdschemaCubesRowset.CatalogName,
             MdschemaCubesRowset.SchemaName,
             MdschemaCubesRowset.CubeName,
+            MdschemaCubesRowset.BaseCubeName,
             MdschemaCubesRowset.CubeType,
             MdschemaCubesRowset.CubeGuid,
             MdschemaCubesRowset.CreatedOn,
@@ -611,7 +612,8 @@ public enum RowsetDefinition {
             MdschemaCubesRowset.Dimensions,
             MdschemaCubesRowset.Sets,
             MdschemaCubesRowset.Measures,
-            MdschemaCubesRowset.CubeSource
+            MdschemaCubesRowset.CubeSource,
+            MdschemaCubesRowset.PreferedQueryPatterns
         },
         new Column[] {
             MdschemaCubesRowset.CatalogName,
@@ -3568,7 +3570,8 @@ TODO: see above
                 Type.String,
                 null,
                 Column.RESTRICTION,
-                Column.OPTIONAL,
+                Column.REQUIRED,
+                true,
                 "The name of the catalog to which this cube belongs.");
         private static final Column SchemaName =
             new Column(
@@ -3585,7 +3588,16 @@ TODO: see above
                 null,
                 Column.RESTRICTION,
                 Column.REQUIRED,
+                true,
                 "Name of the cube.");
+        private static final Column BaseCubeName =
+                new Column(
+                    "BASE_CUBE_NAME",
+                    Type.String,
+                    null,
+                    Column.RESTRICTION,
+                    Column.REQUIRED,
+                    "Base Name of the cube.");
         private static final Column CubeType =
             new Column(
                 "CUBE_TYPE",
@@ -3723,6 +3735,14 @@ TODO: see above
                     Column.NOT_RESTRICTION,
                     Column.OPTIONAL,
                     "Cube source.");
+        private static final Column PreferedQueryPatterns =
+                    new Column(
+                        "PREFERRED_QUERY_PATTERNS",
+                        Type.Rowset,
+                        null,
+                        Column.NOT_RESTRICTION,
+                        Column.OPTIONAL,
+                        "prferred query patterns.");
 
         public void populateImpl(
             XmlaResponse response,
@@ -3758,13 +3778,14 @@ TODO: see above
                         //row.set(SchemaUpdatedBy.name, "");
                         //row.set(LastDataUpdate.name, "");
                         //row.set(DataUpdatedBy.name, "");
+                        row.set(Description.name, "");
                         row.set(IsDrillthroughEnabled.name, true);
-                        row.set(IsWriteEnabled.name, false);
                         row.set(IsLinkable.name, true);
+                        row.set(IsWriteEnabled.name, false);
                         row.set(IsSqlEnabled.name, false);
                         row.set(CubeCaption.name, cube.getCaption());
-                        row.set(Description.name, desc);
                         row.set(CubeSource.name, 1);
+                        row.set(PreferedQueryPatterns.name, 0);
                         
                         Format formatter =
                             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -3772,6 +3793,7 @@ TODO: see above
                             formatter.format(
                                 extra.getSchemaLoadDate(schema));
                         row.set(LastSchemaUpdate.name, formattedDate);
+                        row.set(LastDataUpdate.name, formattedDate);
                         if (deep) {
                             row.set(
                                 Dimensions.name,
