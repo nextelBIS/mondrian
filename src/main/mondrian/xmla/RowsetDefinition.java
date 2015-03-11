@@ -3571,7 +3571,7 @@ TODO: see above
                 null,
                 Column.RESTRICTION,
                 Column.REQUIRED,
-                true,
+                false,
                 "The name of the catalog to which this cube belongs.");
         private static final Column SchemaName =
             new Column(
@@ -3588,7 +3588,7 @@ TODO: see above
                 null,
                 Column.RESTRICTION,
                 Column.REQUIRED,
-                true,
+                false,
                 "Name of the cube.");
         private static final Column BaseCubeName =
                 new Column(
