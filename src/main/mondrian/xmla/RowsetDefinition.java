@@ -3596,7 +3596,7 @@ TODO: see above
                     Type.String,
                     null,
                     Column.RESTRICTION,
-                    Column.REQUIRED,
+                    Column.OPTIONAL,
                     "Base Name of the cube.");
         private static final Column CubeType =
             new Column(
