@@ -1026,7 +1026,7 @@ result output.</p>
 <p>AS 2005 shows this as "(null)" value</p>
         </Description>
         <Type>String</Type>
-        <Default>#null</Default>
+        <Default></Default>
     </PropertyDefinition>
     <PropertyDefinition>
         <Name>IterationLimit</Name>
