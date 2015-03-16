@@ -608,9 +608,9 @@ public enum RowsetDefinition {
             MdschemaCubesRowset.IsWriteEnabled,
             MdschemaCubesRowset.IsSqlEnabled,
             MdschemaCubesRowset.CubeCaption,
-            MdschemaCubesRowset.Dimensions,
-            MdschemaCubesRowset.Sets,
-            MdschemaCubesRowset.Measures,
+//            MdschemaCubesRowset.Dimensions,
+//            MdschemaCubesRowset.Sets,
+//            MdschemaCubesRowset.Measures,
             MdschemaCubesRowset.BaseCubeName,
             MdschemaCubesRowset.CubeSource,
             MdschemaCubesRowset.PreferedQueryPatterns
@@ -3703,34 +3703,34 @@ TODO: see above
                 Column.NOT_RESTRICTION,
                 Column.OPTIONAL,
                 "A user-friendly description of the dimension.");
-        private static final Column Dimensions =
-            new Column(
-                "DIMENSIONS",
-                Type.Rowset,
-                null,
-                Column.NOT_RESTRICTION,
-                Column.OPTIONAL,
-                "Dimensions in this cube.");
-        private static final Column Sets =
-            new Column(
-                "SETS",
-                Type.Rowset,
-                null,
-                Column.NOT_RESTRICTION,
-                Column.OPTIONAL,
-                "Sets in this cube.");
-        private static final Column Measures =
-            new Column(
-                "MEASURES",
-                Type.Rowset,
-                null,
-                Column.NOT_RESTRICTION,
-                Column.OPTIONAL,
-                "Measures in this cube.");
+//        private static final Column Dimensions =
+//            new Column(
+//                "DIMENSIONS",
+//                Type.Rowset,
+//                null,
+//                Column.NOT_RESTRICTION,
+//                Column.OPTIONAL,
+//                "Dimensions in this cube.");
+//        private static final Column Sets =
+//            new Column(
+//                "SETS",
+//                Type.Rowset,
+//                null,
+//                Column.NOT_RESTRICTION,
+//                Column.OPTIONAL,
+//                "Sets in this cube.");
+//        private static final Column Measures =
+//            new Column(
+//                "MEASURES",
+//                Type.Rowset,
+//                null,
+//                Column.NOT_RESTRICTION,
+//                Column.OPTIONAL,
+//                "Measures in this cube.");
         private static final Column CubeSource =
                 new Column(
                     "CUBE_SOURCE",
-                    Type.Rowset,
+                    Type.Short,
                     null,
                     Column.NOT_RESTRICTION,
                     Column.OPTIONAL,
@@ -3738,7 +3738,7 @@ TODO: see above
         private static final Column PreferedQueryPatterns =
                     new Column(
                         "PREFERRED_QUERY_PATTERNS",
-                        Type.Rowset,
+                        Type.Short,
                         null,
                         Column.NOT_RESTRICTION,
                         Column.OPTIONAL,
@@ -3794,48 +3794,48 @@ TODO: see above
                                 extra.getSchemaLoadDate(schema));
                         row.set(LastSchemaUpdate.name, formattedDate);
                         row.set(LastDataUpdate.name, formattedDate);
-                        if (deep) {
-                            row.set(
-                                Dimensions.name,
-                                new MdschemaDimensionsRowset(
-                                    wrapRequest(
-                                        request,
-                                        Olap4jUtil.mapOf(
-                                            MdschemaDimensionsRowset
-                                                .CatalogName,
-                                            catalog.getName(),
-                                            MdschemaDimensionsRowset.SchemaName,
-                                            schema.getName(),
-                                            MdschemaDimensionsRowset.CubeName,
-                                            cube.getName())),
-                                    handler));
-                            row.set(
-                                Sets.name,
-                                new MdschemaSetsRowset(
-                                    wrapRequest(
-                                        request,
-                                        Olap4jUtil.mapOf(
-                                            MdschemaSetsRowset.CatalogName,
-                                            catalog.getName(),
-                                            MdschemaSetsRowset.SchemaName,
-                                            schema.getName(),
-                                            MdschemaSetsRowset.CubeName,
-                                            cube.getName())),
-                                    handler));
-                            row.set(
-                                Measures.name,
-                                new MdschemaMeasuresRowset(
-                                    wrapRequest(
-                                        request,
-                                        Olap4jUtil.mapOf(
-                                            MdschemaMeasuresRowset.CatalogName,
-                                            catalog.getName(),
-                                            MdschemaMeasuresRowset.SchemaName,
-                                            schema.getName(),
-                                            MdschemaMeasuresRowset.CubeName,
-                                            cube.getName())),
-                                    handler));
-                        }
+//                        if (deep) {
+//                            row.set(
+//                                Dimensions.name,
+//                                new MdschemaDimensionsRowset(
+//                                    wrapRequest(
+//                                        request,
+//                                        Olap4jUtil.mapOf(
+//                                            MdschemaDimensionsRowset
+//                                                .CatalogName,
+//                                            catalog.getName(),
+//                                            MdschemaDimensionsRowset.SchemaName,
+//                                            schema.getName(),
+//                                            MdschemaDimensionsRowset.CubeName,
+//                                            cube.getName())),
+//                                    handler));
+//                            row.set(
+//                                Sets.name,
+//                                new MdschemaSetsRowset(
+//                                    wrapRequest(
+//                                        request,
+//                                        Olap4jUtil.mapOf(
+//                                            MdschemaSetsRowset.CatalogName,
+//                                            catalog.getName(),
+//                                            MdschemaSetsRowset.SchemaName,
+//                                            schema.getName(),
+//                                            MdschemaSetsRowset.CubeName,
+//                                            cube.getName())),
+//                                    handler));
+//                            row.set(
+//                                Measures.name,
+//                                new MdschemaMeasuresRowset(
+//                                    wrapRequest(
+//                                        request,
+//                                        Olap4jUtil.mapOf(
+//                                            MdschemaMeasuresRowset.CatalogName,
+//                                            catalog.getName(),
+//                                            MdschemaMeasuresRowset.SchemaName,
+//                                            schema.getName(),
+//                                            MdschemaMeasuresRowset.CubeName,
+//                                            cube.getName())),
+//                                    handler));
+//                        }
                         addRow(row, rows);
                     }
                 }
