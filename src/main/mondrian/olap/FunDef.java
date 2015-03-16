@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 public interface FunDef {
     /**
      * Returns the syntactic type of the function.
+     * 
      */
     Syntax getSyntax();
 

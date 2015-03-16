@@ -37,8 +37,16 @@ class GenerateFunDef extends FunDefBase {
             "Generate",
             "Generate(<Set>, <String>[, <String>])",
             "Applies a set to a string expression and joins resulting sets by string concatenation.",
-            new String[] {"fSxS", "fSxSS"},
+            new String[] {"fSxS", "fSxSS", "fSxNS"},
             GenerateFunDef.class);
+    
+    static final ReflectiveMultiResolver NumericResolver =
+            new ReflectiveMultiResolver(
+                "Generate",
+                "Generate(<Set>, <Numeric Expression>[, <String>])",
+                "Applies a set to a string expression and joins resulting sets by string concatenation.",
+                new String[] {"fSxS", "fSxSS"},
+                GenerateFunDef.class);
 
     private static final String[] ReservedWords = new String[] {"ALL"};
 
@@ -48,7 +56,7 @@ class GenerateFunDef extends FunDefBase {
 
     public Type getResultType(Validator validator, Exp[] args) {
         final Type type = args[1].getType();
-        if (type instanceof StringType) {
+        if (type instanceof StringType || type instanceof NumericType) {
             // Generate(<Set>, <String>[, <String>])
             return type;
         } else {
@@ -71,7 +79,19 @@ class GenerateFunDef extends FunDefBase {
 
             return new GenerateStringCalcImpl(
                 call, (IterCalc) iterCalc, stringCalc, delimCalc);
-        } else {
+        } else if (call.getArg(1).getType() instanceof NumericType) {
+            final IntegerCalc integerCalc =
+                    compiler.compileInteger(call.getArg(1));
+                final StringCalc delimCalc;
+                if (call.getArgCount() == 3) {
+                    delimCalc = compiler.compileString(call.getArg(2));
+                } else {
+                    delimCalc = ConstantCalc.constantString("");
+                }
+
+                return new GenerateIntegerCalcImpl(
+                    call, (IterCalc) iterCalc, integerCalc, delimCalc);
+            } else {
             final ListCalc listCalc2 =
                 compiler.compileList(call.getArg(1));
             final String literalArg = getLiteralArg(call, 2, "", ReservedWords);
@@ -186,6 +206,52 @@ class GenerateFunDef extends FunDefBase {
                     }
                     final String result2 =
                         stringCalc.evaluateString(evaluator);
+                    buf.append(result2);
+                }
+                return buf.toString();
+            } finally {
+                evaluator.restore(savepoint);
+            }
+        }
+
+        public boolean dependsOn(Hierarchy hierarchy) {
+            return anyDependsButFirst(getCalcs(), hierarchy);
+        }
+    }
+    
+    private static class GenerateIntegerCalcImpl extends AbstractStringCalc {
+        private final IterCalc iterCalc;
+        private final IntegerCalc integerCalc;
+        private final StringCalc sepCalc;
+
+        public GenerateIntegerCalcImpl(
+            ResolvedFunCall call,
+            IterCalc iterCalc,
+            IntegerCalc integerCalc,
+            StringCalc sepCalc)
+        {
+            super(call, new Calc[]{iterCalc, integerCalc});
+            this.iterCalc = iterCalc;
+            this.integerCalc = integerCalc;
+            this.sepCalc = sepCalc;
+        }
+
+        public String evaluateString(Evaluator evaluator) {
+            final int savepoint = evaluator.savepoint();
+            try {
+                StringBuilder buf = new StringBuilder();
+                int k = 0;
+                final TupleIterable iter11 =
+                    iterCalc.evaluateIterable(evaluator);
+                final TupleCursor cursor = iter11.tupleCursor();
+                while (cursor.forward()) {
+                    cursor.setContext(evaluator);
+                    if (k++ > 0) {
+                        String sep = sepCalc.evaluateString(evaluator);
+                        buf.append(sep);
+                    }
+                    final int result2 =
+                            integerCalc.evaluateInteger(evaluator);
                     buf.append(result2);
                 }
                 return buf.toString();

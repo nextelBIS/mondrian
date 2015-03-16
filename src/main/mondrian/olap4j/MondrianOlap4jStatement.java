@@ -359,10 +359,11 @@ abstract class MondrianOlap4jStatement
                 new Locus.Action<Pair<Query, MondrianOlap4jCellSetMetaData>>() {
                     public Pair<Query, MondrianOlap4jCellSetMetaData> execute()
                     {
+                        final String mdx2 = mdx.replace("from \ncell properties value", "from [Webanalytics] \ncell properties value");
                         final Query query =
                             (Query) mondrianConnection.parseStatement(
                                 MondrianOlap4jStatement.this,
-                                mdx,
+                                mdx2,
                                 null,
                                 false);
                         final MondrianOlap4jCellSetMetaData cellSetMetaData =

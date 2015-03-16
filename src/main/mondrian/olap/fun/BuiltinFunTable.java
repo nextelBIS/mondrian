@@ -1269,7 +1269,7 @@ public class BuiltinFunTable extends FunTableImpl {
         // <Dimension>.UniqueName
         builder.define(
             new FunDefBase(
-                "UniqueName",
+                "unique_name",
                 "Returns the unique name of a dimension.",
                 "pSd")
         {
@@ -1291,7 +1291,7 @@ public class BuiltinFunTable extends FunTableImpl {
         // <Hierarchy>.UniqueName
         builder.define(
             new FunDefBase(
-                "UniqueName",
+                "unique_name",
                 "Returns the unique name of a hierarchy.",
                 "pSh")
         {
@@ -1313,7 +1313,7 @@ public class BuiltinFunTable extends FunTableImpl {
         // <Level>.UniqueName
         builder.define(
             new FunDefBase(
-                "UniqueName",
+                "unique_name",
                 "Returns the unique name of a level.",
                 "pSl")
         {
@@ -1333,7 +1333,7 @@ public class BuiltinFunTable extends FunTableImpl {
         // <Member>.UniqueName
         builder.define(
             new FunDefBase(
-                "UniqueName",
+                "unique_name",
                 "Returns the unique name of a member.",
                 "pSm")
         {
