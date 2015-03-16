@@ -69,7 +69,9 @@ class MondrianOlap4jSchema
             : olap4jConnection.getMondrianConnection()
                 .getSchemaReader().getCubes())
         {
-            list.add(olap4jConnection.toOlap4j(cube));
+            if(cube.isVisible()) {
+                list.add(olap4jConnection.toOlap4j(cube));
+            }
         }
         return Olap4jUtil.cast(list);
     }
