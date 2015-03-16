@@ -9,21 +9,36 @@
 
 package mondrian.olap4j;
 
-import mondrian.calc.ResultStyle;
-import mondrian.olap.*;
-import mondrian.rolap.RolapConnection;
-import mondrian.server.*;
-import mondrian.util.Pair;
-
-import org.olap4j.*;
-import org.olap4j.layout.RectangularCellSetFormatter;
-import org.olap4j.mdx.*;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Collections;
 import java.util.List;
+
+import mondrian.calc.ResultStyle;
+import mondrian.olap.DrillThrough;
+import mondrian.olap.Explain;
+import mondrian.olap.MondrianException;
+import mondrian.olap.Query;
+import mondrian.olap.QueryCanceledException;
+import mondrian.olap.QueryPart;
+import mondrian.olap.QueryTimeoutException;
+import mondrian.rolap.RolapConnection;
+import mondrian.server.Execution;
+import mondrian.server.Locus;
+import mondrian.server.StatementImpl;
+import mondrian.util.Pair;
+
+import org.olap4j.CellSet;
+import org.olap4j.CellSetListener;
+import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
+import org.olap4j.OlapStatement;
+import org.olap4j.mdx.ParseTreeNode;
+import org.olap4j.mdx.ParseTreeWriter;
+import org.olap4j.mdx.SelectNode;
 
 /**
  * Implementation of {@link org.olap4j.OlapStatement}
@@ -359,7 +374,13 @@ abstract class MondrianOlap4jStatement
                 new Locus.Action<Pair<Query, MondrianOlap4jCellSetMetaData>>() {
                     public Pair<Query, MondrianOlap4jCellSetMetaData> execute()
                     {
-                        final String mdx2 = mdx.replace("from \ncell properties value", "from [Webanalytics] \ncell properties value");
+                        String mdx2 = mdx.replace("\n", " ").replace("\t", " ").replace("   ", " ").replace("  ", " ").trim();
+                        mdx2 = mdx2.replace("from cell properties value", "from [Webanalytics] cell properties value");
+                        if(mdx2.endsWith("from")) {
+                            mdx2 = mdx2.replace("from", "from [Webanalytics]");
+                        }
+
+                        System.out.println("|"+mdx2+"|");
                         final Query query =
                             (Query) mondrianConnection.parseStatement(
                                 MondrianOlap4jStatement.this,

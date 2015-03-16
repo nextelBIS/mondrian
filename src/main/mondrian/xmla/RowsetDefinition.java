@@ -5494,8 +5494,8 @@ TODO: see above
             row.set(CubeName.name, cube.getName());
             row.set(MeasureName.name, member.getName());
             row.set(MeasureUniqueName.name, member.getUniqueName());
-            row.set(MeasureCaption.name, "visit-count-flat");
-            row.set(MeasureUnqualifiedCaption.name, "visit-count-flat");
+            row.set(MeasureCaption.name, "Visitor Count");
+            row.set(MeasureUnqualifiedCaption.name, "Visitor Count");
             
             //row.set(MeasureGuid.name, "");
            // row.set(MeasureGroupName.name, "TestGruppe");
