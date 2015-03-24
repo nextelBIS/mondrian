@@ -831,8 +831,8 @@ public class SqlTupleReader implements TupleReader {
                 // not column name strings or expressions.
                 if (fullyJoiningBaseCubes.size() > 1) {
                     for (int i = 0; i < types.size(); i++) {
-                        unionQuery.addOrderBy(
-                            i + 1 + "",
+                        unionQuery.addOrderByColIndex(
+                            i + 1,
                             true,
                             false,
                             // We can't order the nulls

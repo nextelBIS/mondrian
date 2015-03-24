@@ -636,6 +636,25 @@ public class SqlQuery {
             orderBy.add(orderExpr);
         }
     }
+    
+    public void addOrderByColIndex(
+        int columnIndex,
+        boolean ascending,
+        boolean prepend,
+        boolean nullable)
+    {
+        String orderExpr =
+            dialect.generateOrderItem(
+                "" + columnIndex,
+                nullable,
+                ascending,
+                true);
+        if (prepend) {
+            orderBy.add(0, orderExpr);
+        } else {
+            orderBy.add(orderExpr);
+        }
+    }
 
     public String toString()
     {
