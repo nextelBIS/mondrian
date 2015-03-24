@@ -158,7 +158,7 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
             // All that follows is logic for distinct count. It's not like the
             // other aggregators.
             if (tupleList.size() == 0) {
-                return DoubleNull;
+                return nullValue;
             }
 
             // Optimize the list
