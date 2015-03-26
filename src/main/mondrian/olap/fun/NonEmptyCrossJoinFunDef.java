@@ -73,15 +73,15 @@ public class NonEmptyCrossJoinFunDef extends CrossJoinFunDef {
                         }
                     }
 
-//                    NativeEvaluator nativeEvaluator =
-//                        schemaReader.getNativeSetEvaluator(
-//                            call.getFunDef(), call.getArgs(), evaluator, this);
-//                    if (nativeEvaluator != null) {
-//                        evaluator.restore(savepoint);
-//                        return
-//                            (TupleList) nativeEvaluator.execute(
-//                                ResultStyle.LIST);
-//                    }
+                    NativeEvaluator nativeEvaluator =
+                        schemaReader.getNativeSetEvaluator(
+                            call.getFunDef(), call.getArgs(), evaluator, this);
+                    if (nativeEvaluator != null) {
+                        evaluator.restore(savepoint);
+                        return
+                            (TupleList) nativeEvaluator.execute(
+                                ResultStyle.LIST);
+                    }
 
                     final TupleList list1 = listCalc1.evaluateList(evaluator);
                     if (list1.isEmpty()) {
