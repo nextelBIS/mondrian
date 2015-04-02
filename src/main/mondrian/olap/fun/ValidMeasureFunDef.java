@@ -105,14 +105,25 @@ public class ValidMeasureFunDef extends FunDefBase
             // declare members array and fill in with all needed members
             final List<Member> validMeasureMembers =
                 new ArrayList<Member>(memberList);
+            
+            final Set<Hierarchy> hierarchies = new HashSet<Hierarchy>();
+            for (Member member : memberList) {
+            	hierarchies.add(member.getHierarchy());
+            }
+            
             // start adding to validMeasureMembers at right place
             for (Dimension vMinusBDimension : vMinusBDimensions) {
-                final Hierarchy hierarchy = vMinusBDimension.getHierarchy();
-                if (hierarchy.hasAll()) {
-                    validMeasureMembers.add(hierarchy.getAllMember());
-                } else {
-                    validMeasureMembers.add(hierarchy.getDefaultMember());
-                }
+            	for (Hierarchy hierarchy : vMinusBDimension.getHierarchies()) {
+            		if (!hierarchies.contains(hierarchy)) {
+            			validMeasureMembers.add(hierarchy.hasAll() ? hierarchy.getAllMember() : hierarchy.getDefaultMember());
+            		}
+            	}
+//                final Hierarchy hierarchy = vMinusBDimension.getHierarchy();
+//                if (hierarchy.hasAll()) {
+//                    validMeasureMembers.add(hierarchy.getAllMember());
+//                } else {
+//                    validMeasureMembers.add(hierarchy.getDefaultMember());
+//                }
             }
             // this needs to be done before validmeasuremembers are set on the
             // context since calculated members defined on a non joining
