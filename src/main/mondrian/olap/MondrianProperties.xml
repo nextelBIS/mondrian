@@ -855,7 +855,7 @@ Property that defines
 limit on the number of rows returned by XML/A drill through request.
         </Description>
         <Type>int</Type>
-        <Default>10000</Default>
+        <Default>1000</Default>
     </PropertyDefinition>
     <PropertyDefinition>
         <Name>MaxConstraints</Name>
@@ -876,7 +876,7 @@ number of expressions in a list is 1000".</p>
 </ul>
         </Description>
         <Type>int</Type>
-        <Default>1000</Default>
+        <Default>10000</Default>
     </PropertyDefinition>
     <PropertyDefinition>
         <Name>OptimizePredicates</Name>
